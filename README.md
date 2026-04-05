@@ -28,8 +28,8 @@
     <img src="assets/badge_github.png" alt="Get it on GitHub" height="60" style="vertical-align: middle"/>
   </a>
   &nbsp;
-  <a href="https://f-droid.org/en/packages/com.ngiov.docker_controller">
-    <img src="assets/badge_fdroid.png" alt="Get it on F-Droid" height="60" style="vertical-align: middle"/>
+  <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/nikosgiov/orca">
+    <img src="assets/badge_obtainium.png" alt="Get it on Obtainium" height="60" style="vertical-align: middle"/>
   </a>
 </p>
 
