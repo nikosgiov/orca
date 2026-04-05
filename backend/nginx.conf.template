@@ -1,0 +1,33 @@
+events {
+    worker_connections 1024;
+}
+
+http {
+    upstream backend {
+        server backend:${PORT};
+    }
+
+    server {
+        listen ${HTTP_PORT};
+
+        # If SSL is configured, we can redirect HTTP to HTTPS
+        # However, the user said "in case user configures for http only there should be no errors"
+        # So we handle both ports if available.
+
+        location / {
+            proxy_pass http://backend;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            
+            # WebSocket support
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+        }
+    }
+
+    # SSL Server Block (placed in a separate file by entrypoint if certs exist)
+    include /etc/nginx/conf.d/ssl.conf*;
+}

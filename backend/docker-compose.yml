@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    container_name: orca-backend
+    restart: unless-stopped
+    # Enable NVIDIA GPU support if available
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${COMPOSE_PROJECTS_DIR}:${COMPOSE_PROJECTS_DIR}
+    env_file:
+      - .env
+
+  nginx:
+    image: nginx:alpine
+    container_name: orca-nginx
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT}:${HTTP_PORT}"
+      - "${HTTPS_PORT}:${HTTPS_PORT}"
+    volumes:
+      - ./nginx.conf.template:/etc/nginx/nginx.conf.template:ro
+      - ./nginx-entrypoint.sh:/etc/nginx/nginx-entrypoint.sh:ro
+      - ./server.pem:/etc/nginx/ssl/server.pem:ro
+      - ./server.key:/etc/nginx/ssl/server.key:ro
+    env_file:
+      - .env
+    entrypoint: /bin/sh /etc/nginx/nginx-entrypoint.sh
+    depends_on:
+      - backend

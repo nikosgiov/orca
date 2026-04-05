@@ -1,0 +1,64 @@
+name: Android Release Build
+
+on:
+  workflow_dispatch: # Allows manual triggering
+  push:
+    tags:
+      - 'v*' # Trigger on version tags
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        run: flutter pub get
+        working-directory: docker_controller
+
+      - name: Decode Android Keystore
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > docker_controller/android/app/release.jks
+
+      - name: Create key.properties
+        run: |
+          cat <<EOF > docker_controller/android/key.properties
+          storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+          keyAlias=${{ secrets.ANDROID_KEYALIAS }}
+          storeFile=release.jks
+          EOF
+
+      - name: Build APK
+        run: flutter build apk --release
+        working-directory: docker_controller
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: docker_controller/build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: docker_controller/build/app/outputs/flutter-apk/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

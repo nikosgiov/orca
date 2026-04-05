@@ -51,9 +51,14 @@ unlinked_spec.ds
 .gradle/
 **/android/captures/
 **/android/gradlew
-**/android/gradlew.bat
-**/android/local.properties
-**/android/**/GeneratedPluginRegistrant.java
+# Android local configuration
+android/local.properties
+
+# Signing secrets
+*.jks
+*.keystore
+
+# iOS generated configuration
 **/android/key.properties
 *.jks
 
@@ -109,6 +114,16 @@ coverage/
 
 # Symbols
 app.*.symbols
+
+# Environments & Secrets
+.env
+.env.*
+backend/dockercontroller-firebase.json
+backend/server.key
+backend/server.pem
+*.jks
+*.keystore
+local.properties
 
 # Exceptions to above rules.
 !**/ios/**/default.mode1v3
