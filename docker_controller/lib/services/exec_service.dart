@@ -13,13 +13,11 @@ class ExecService {
     final protocol = config.useTls ? 'https://' : 'http://';
     final httpUrl = Uri.parse('$protocol${config.uri}');
     final scheme = httpUrl.scheme == 'https' ? 'wss' : 'ws';
-    
+
     // Construct the endpoint URI
     // e.g. ws://localhost:8000/compose/exec/{containerId}?shell=/bin/sh
-    final Map<String, dynamic> queryParams = {
-      'shell': shell,
-    };
-    
+    final Map<String, dynamic> queryParams = {'shell': shell};
+
     // If the config requires an authorization token, pass it as a query param.
     // (WebSockets in the browser/flutter don't easily allow setting the Authorization header directly)
     if (config.token != null && config.token!.isNotEmpty) {

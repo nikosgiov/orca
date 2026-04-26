@@ -1,0 +1,168 @@
+import 'dart:ui' as ui;
+import 'package:flutter/material.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_gradients.dart';
+
+class _NavItem {
+  const _NavItem(this.icon, this.label);
+  final IconData icon;
+  final String label;
+}
+
+const _navItems = [
+  _NavItem(Icons.grid_view_rounded, 'Dash'),
+  _NavItem(Icons.view_in_ar_rounded, 'Containers'),
+  _NavItem(Icons.layers_rounded, 'Images'),
+  _NavItem(Icons.analytics_rounded, 'Monitor'),
+  _NavItem(Icons.account_tree_rounded, 'Compose'),
+  _NavItem(Icons.settings_rounded, 'Config'),
+];
+
+/// The main layout shell of the application, including the floating navigation bar.
+class MainScreen extends StatelessWidget {
+  const MainScreen({
+    super.key,
+    required this.currentIndex,
+    required this.onTabChanged,
+    required this.child,
+  });
+  final int currentIndex;
+  final ValueChanged<int> onTabChanged;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(gradient: AppGradients.background),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        extendBody: true,
+        body: child,
+        bottomNavigationBar: _FloatingNavBar(
+          currentIndex: currentIndex,
+          onTap: onTabChanged,
+        ),
+      ),
+    );
+  }
+}
+
+class _FloatingNavBar extends StatelessWidget {
+  const _FloatingNavBar({required this.currentIndex, required this.onTap});
+  final int currentIndex;
+  final ValueChanged<int> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 20),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(28),
+          child: BackdropFilter(
+            filter: ui.ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0x22FFFFFF),
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(color: AppColors.glassBorder, width: 1),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    blurRadius: 30,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: List.generate(_navItems.length, (i) {
+                  return Expanded(
+                    child: _NavItemWidget(
+                      item: _navItems[i],
+                      isActive: currentIndex == i,
+                      onTap: () => onTap(i),
+                    ),
+                  );
+                }),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NavItemWidget extends StatelessWidget {
+  const _NavItemWidget({
+    required this.item,
+    required this.isActive,
+    required this.onTap,
+  });
+  final _NavItem item;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                Icon(
+                  item.icon,
+                  size: 22,
+                  color: isActive
+                      ? AppColors.primary
+                      : AppColors.textMuted.withValues(alpha: 0.55),
+                ),
+                if (isActive)
+                  Positioned(
+                    bottom: -5,
+                    child: Container(
+                      width: 4,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.9),
+                            blurRadius: 5,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              item.label.toUpperCase(),
+              style: TextStyle(
+                fontSize: 8,
+                fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
+                color: isActive
+                    ? AppColors.primary
+                    : AppColors.textMuted.withValues(alpha: 0.55),
+                letterSpacing: 0.4,
+              ),
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

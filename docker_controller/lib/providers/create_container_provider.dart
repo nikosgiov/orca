@@ -1,13 +1,27 @@
-import 'package:flutter/material.dart';
 import 'dart:convert';
+
+import 'package:flutter/material.dart';
+
+import '../core/di/service_locator.dart';
+import '../models/app_error.dart';
+import '../providers/auth_provider.dart';
 import '../services/container_service.dart';
 import '../services/image_service.dart';
-import '../providers/app_provider.dart';
-import '../models/app_error.dart';
 import '../utils/container_config_builder.dart';
 
 class CreateContainerProvider extends ChangeNotifier {
-  final AppProvider appProvider;
+  CreateContainerProvider(this.authProvider, {String? preSelectedImage}) {
+    if (preSelectedImage != null) {
+      selectedImage = preSelectedImage;
+      final parts = selectedImage.split(':');
+      imageController.text = parts[0];
+      if (parts.length > 1) {
+        tagController.text = parts[1];
+      }
+    }
+    loadImages();
+  }
+  final AuthProvider authProvider;
   final formKey = GlobalKey<FormState>();
   final nameController = TextEditingController();
   final imageController = TextEditingController();
@@ -39,18 +53,6 @@ class CreateContainerProvider extends ChangeNotifier {
     'Review & Create',
   ];
 
-  CreateContainerProvider(this.appProvider, {String? preSelectedImage}) {
-    if (preSelectedImage != null) {
-      selectedImage = preSelectedImage;
-      final parts = selectedImage.split(':');
-      imageController.text = parts[0];
-      if (parts.length > 1) {
-        tagController.text = parts[1];
-      }
-    }
-    loadImages();
-  }
-
   void disposeControllers() {
     nameController.dispose();
     imageController.dispose();
@@ -62,28 +64,31 @@ class CreateContainerProvider extends ChangeNotifier {
     error = null;
     notifyListeners();
     try {
-      if (appProvider.connectionConfig != null) {
-        final images = await ImageService.getImages(appProvider.connectionConfig!);
-        if (images != null) {
-          availableImages = images.map<String>((image) {
-            final tags = image['RepoTags'] as List?;
-            if (tags != null && tags.isNotEmpty) {
-              return tags.first.toString();
-            }
-            final repoDigests = image['RepoDigests'] as List?;
-            if (repoDigests != null && repoDigests.isNotEmpty) {
-              return repoDigests.first.toString().split('@').first;
-            }
-            return image['Id']?.toString().substring(0, 12) ?? 'Unknown';
-          }).toList();
-        } else {
-          error = AppError(message: 'Failed to load images', type: 'ImageLoad');
-        }
+      if (authProvider.connectionConfig != null) {
+        final images = await getIt<ImageService>().getImages();
+        availableImages = images.map<String>((image) {
+          final tags = image.repoTags;
+          if (tags.isNotEmpty) {
+            return tags.first;
+          }
+          final repoDigests = image.repoDigests;
+          if (repoDigests.isNotEmpty) {
+            return repoDigests.first.split('@').first;
+          }
+          return image.id.substring(0, 12);
+        }).toList();
       } else {
-        error = AppError(message: 'Not connected to Docker daemon', type: 'Connection');
+        error = AppError(
+          message: 'Not connected to Docker daemon',
+          type: 'Connection',
+        );
       }
     } catch (e, st) {
-      error = AppError(message: 'Error loading images: $e', type: 'Exception', stackTrace: st);
+      error = AppError(
+        message: 'Error loading images: $e',
+        type: 'Exception',
+        stackTrace: st,
+      );
     } finally {
       isLoadingImages = false;
       notifyListeners();
@@ -213,11 +218,13 @@ class CreateContainerProvider extends ChangeNotifier {
   }
 
   Future<String?> createContainer(BuildContext context) async {
-    if (!formKey.currentState!.validate()) return null;
+    if (!formKey.currentState!.validate()) {
+      return null;
+    }
     isCreating = true;
     notifyListeners();
     try {
-      if (appProvider.connectionConfig == null) {
+      if (authProvider.connectionConfig == null) {
         throw Exception('Not connected to Docker daemon');
       }
       ScaffoldMessenger.of(context).showSnackBar(
@@ -239,12 +246,18 @@ class CreateContainerProvider extends ChangeNotifier {
         environmentVars: environmentVars,
       );
       // Debug: Log the container configuration
-      debugPrint('Creating container with config: ${json.encode(containerConfig)}');
+      debugPrint(
+        'Creating container with config: ${json.encode(containerConfig)}',
+      );
       String? containerId;
       if (startAfterCreate) {
-        containerId = await ContainerService.createAndStartContainer(appProvider.connectionConfig!, containerConfig);
+        containerId = await getIt<ContainerService>().createAndStartContainer(
+          containerConfig,
+        );
       } else {
-        containerId = await ContainerService.createContainer(appProvider.connectionConfig!, containerConfig);
+        containerId = await getIt<ContainerService>().createContainer(
+          containerConfig,
+        );
       }
       isCreating = false;
       notifyListeners();
@@ -252,7 +265,9 @@ class CreateContainerProvider extends ChangeNotifier {
     } catch (e) {
       isCreating = false;
       notifyListeners();
-      if (!context.mounted) return null;
+      if (!context.mounted) {
+        return null;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to create container: $e'),
@@ -262,4 +277,4 @@ class CreateContainerProvider extends ChangeNotifier {
       return null;
     }
   }
-} 
+}

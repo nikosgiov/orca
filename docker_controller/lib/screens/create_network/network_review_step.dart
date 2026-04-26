@@ -3,9 +3,8 @@ import '../../constants/app_colors.dart';
 import '../../providers/create_network_provider.dart';
 
 class NetworkReviewStep extends StatelessWidget {
-  final CreateNetworkProvider provider;
-
   const NetworkReviewStep({super.key, required this.provider});
+  final CreateNetworkProvider provider;
 
   @override
   Widget build(BuildContext context) {
@@ -16,17 +15,33 @@ class NetworkReviewStep extends StatelessWidget {
           _buildReviewCard('Name', provider.nameController.text, Icons.wifi),
           _buildReviewCard('Driver', provider.selectedDriver, Icons.settings),
           if (provider.subnetController.text.isNotEmpty)
-            _buildReviewCard('Subnet', provider.subnetController.text, Icons.network_check),
+            _buildReviewCard(
+              'Subnet',
+              provider.subnetController.text,
+              Icons.network_check,
+            ),
           if (provider.gatewayController.text.isNotEmpty)
-            _buildReviewCard('Gateway', provider.gatewayController.text, Icons.router),
+            _buildReviewCard(
+              'Gateway',
+              provider.gatewayController.text,
+              Icons.router,
+            ),
           if (provider.options.isNotEmpty)
-            _buildReviewCard('Options', 
-              provider.options.map((o) => '${o['key']}=${o['value']}').join(', '), 
-              Icons.settings),
+            _buildReviewCard(
+              'Options',
+              provider.options
+                  .map((o) => '${o['key']}=${o['value']}')
+                  .join(', '),
+              Icons.settings,
+            ),
           if (provider.labels.isNotEmpty)
-            _buildReviewCard('Labels', 
-              provider.labels.map((l) => '${l['key']}=${l['value']}').join(', '), 
-              Icons.label),
+            _buildReviewCard(
+              'Labels',
+              provider.labels
+                  .map((l) => '${l['key']}=${l['value']}')
+                  .join(', '),
+              Icons.label,
+            ),
         ],
       ),
     );
@@ -43,7 +58,7 @@ class NetworkReviewStep extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, color: AppColors.secondaryBlue, size: 20),
+          Icon(icon, color: AppColors.secondary, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

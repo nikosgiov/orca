@@ -3,11 +3,6 @@ import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
 
 class InfoRow extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData? icon;
-  final bool isMultiline;
-
   const InfoRow({
     super.key,
     required this.label,
@@ -15,6 +10,10 @@ class InfoRow extends StatelessWidget {
     this.icon,
     this.isMultiline = false,
   });
+  final String label;
+  final String value;
+  final IconData? icon;
+  final bool isMultiline;
 
   @override
   Widget build(BuildContext context) {

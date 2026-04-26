@@ -118,7 +118,7 @@ class AppTextStyles {
 
   // ── Error messages ───────────────────────────────────────────────────────────
   static const TextStyle errorMessage = TextStyle(
-    color: AppColors.errorRed,
+    color: AppColors.error,
     fontWeight: FontWeight.w600,
     fontSize: 14,
   );

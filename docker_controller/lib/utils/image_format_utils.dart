@@ -16,7 +16,9 @@ class ImageFormatUtils {
   }
 
   static String formatSize(dynamic size) {
-    if (size == null) return 'Unknown';
+    if (size == null) {
+      return 'Unknown';
+    }
     final sizeInBytes = (size as int?) ?? 0;
     if (sizeInBytes < 1024) {
       return '${sizeInBytes}B';
@@ -30,7 +32,9 @@ class ImageFormatUtils {
   }
 
   static String formatCreatedDate(dynamic created) {
-    if (created == null) return 'Unknown';
+    if (created == null) {
+      return 'Unknown';
+    }
     try {
       final timestamp = (created as int?) ?? 0;
       final date = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
@@ -61,4 +65,4 @@ class ImageFormatUtils {
     }
     return 'No digest';
   }
-} 
+}

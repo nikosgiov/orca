@@ -2,14 +2,9 @@ import 'package:flutter/material.dart';
 
 /// Pill status badge with glow effect matching code.html badges.
 class AppStatusChip extends StatelessWidget {
+  const AppStatusChip({super.key, required this.status, required this.color});
   final String status;
   final Color color;
-
-  const AppStatusChip({
-    super.key,
-    required this.status,
-    required this.color,
-  });
 
   @override
   Widget build(BuildContext context) {

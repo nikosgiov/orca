@@ -1,25 +1,55 @@
-import 'package:flutter/material.dart';
 import 'dart:async';
-import '../services/container_service.dart';
-import '../providers/app_provider.dart';
-import '../utils/container_filter_utils.dart';
+
+import 'package:flutter/material.dart';
+
 import '../constants/app_delays.dart';
+import '../core/di/service_locator.dart';
+import '../models/app_state.dart';
+import '../models/docker_container.dart';
+import '../providers/auth_provider.dart';
+import '../services/container_service.dart';
+import '../utils/container_filter_utils.dart';
 
+/// Provider responsible for managing the state of Docker containers.
+/// Handles fetching, refreshing, starting, and stopping containers, as well as filtering.
 class ContainersProvider extends ChangeNotifier {
-  final AppProvider appProvider;
-  ContainersProvider(this.appProvider);
+  ContainersProvider(this.authProvider, {ContainerService? containerService})
+    : _containerService = containerService ?? getIt<ContainerService>();
 
-  List<Map<String, dynamic>>? _containers;
-  bool _isLoading = false;
+  /// The authentication provider used to check connection status.
+  final AuthProvider authProvider;
+  final ContainerService _containerService;
+
+  AppState<List<DockerContainer>> _state = const AppInitial();
+
+  /// The current state of the containers list (Loading, Success, Error).
+  AppState<List<DockerContainer>> get state => _state;
+
   String _searchQuery = '';
   String _selectedFilter = 'All';
+
+  /// Available filter options for the container list.
   final List<String> filterOptions = ['All', 'Running', 'Stopped', 'Exited'];
   bool _isRefreshing = false;
 
-  List<Map<String, dynamic>>? get containers => _containers;
-  bool get isLoading => _isLoading;
+  /// Returns the current list of containers if available in the success state.
+  List<DockerContainer>? get containers {
+    if (_state is AppSuccess<List<DockerContainer>>) {
+      return (_state as AppSuccess<List<DockerContainer>>).data;
+    }
+    return null;
+  }
+
+  /// Whether the provider is currently loading data for the first time.
+  bool get isLoading => _state is AppLoading;
+
+  /// The current search query string.
   String get searchQuery => _searchQuery;
+
+  /// The currently selected status filter.
   String get selectedFilter => _selectedFilter;
+
+  /// Whether a background refresh is currently in progress.
   bool get isRefreshing => _isRefreshing;
 
   set searchQuery(String value) {
@@ -32,28 +62,39 @@ class ContainersProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  List<Map<String, dynamic>> get filteredContainers {
+  /// Returns a list of containers filtered by the current [searchQuery] and [selectedFilter].
+  List<DockerContainer> get filteredContainers {
     return ContainerFilterUtils.filterContainers(
-      containers: _containers ?? [],
+      containers: containers ?? [],
       searchQuery: _searchQuery,
       selectedFilter: _selectedFilter,
     );
   }
 
+  /// Fetches the list of containers from the Docker daemon.
   Future<void> fetchContainers() async {
-    final config = appProvider.connectionConfig;
-    if (config == null) return;
-    _isLoading = true;
+    if (!authProvider.isConnected) {
+      return;
+    }
+
+    _state = const AppLoading();
     notifyListeners();
+
     try {
-      final containers = await ContainerService.getContainers(config);
-      _containers = containers;
+      final containersList = await _containerService.getContainers();
+      _state = AppSuccess(containersList);
+    } catch (e, st) {
+      _state = AppError(
+        message: 'Failed to load containers: $e',
+        error: e,
+        stackTrace: st,
+      );
     } finally {
-      _isLoading = false;
       notifyListeners();
     }
   }
 
+  /// Refreshes the container list without showing a full-screen loading indicator.
   Future<void> refreshContainers() async {
     _isRefreshing = true;
     notifyListeners();
@@ -65,13 +106,14 @@ class ContainersProvider extends ChangeNotifier {
     }
   }
 
+  /// Starts a container by its ID and refreshes the list.
   Future<bool> startContainer(String containerId) async {
-    final config = appProvider.connectionConfig;
-    if (config == null) return false;
+    if (!authProvider.isConnected) {
+      return false;
+    }
     try {
-      final success = await ContainerService.startContainer(config, containerId);
+      final success = await _containerService.startContainer(containerId);
       if (success) {
-        // Add delay before refreshing data
         await Future.delayed(AppDelays.containerOperationDelay);
         await fetchContainers();
       }
@@ -81,13 +123,14 @@ class ContainersProvider extends ChangeNotifier {
     }
   }
 
+  /// Stops a container by its ID and refreshes the list.
   Future<bool> stopContainer(String containerId) async {
-    final config = appProvider.connectionConfig;
-    if (config == null) return false;
+    if (!authProvider.isConnected) {
+      return false;
+    }
     try {
-      final success = await ContainerService.stopContainer(config, containerId);
+      final success = await _containerService.stopContainer(containerId);
       if (success) {
-        // Add delay before refreshing data
         await Future.delayed(AppDelays.containerOperationDelay);
         await fetchContainers();
       }
@@ -96,4 +139,4 @@ class ContainersProvider extends ChangeNotifier {
       return false;
     }
   }
-} 
+}

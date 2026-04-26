@@ -1,23 +1,25 @@
 import 'package:flutter/material.dart';
-import '../../constants/app_strings.dart';
+
 import '../../constants/app_paddings.dart';
+import '../../constants/app_strings.dart';
+import '../../providers/container_detail_provider.dart';
+import '../../utils/container_format_utils.dart';
 import '../../widgets/info_card.dart';
 import '../../widgets/info_row.dart';
-import '../../utils/container_format_utils.dart';
-import '../../providers/container_detail_provider.dart';
 
 class InfoTab extends StatelessWidget {
-  final ContainerDetailProvider provider;
   const InfoTab({super.key, required this.provider});
+  final ContainerDetailProvider provider;
   @override
   Widget build(BuildContext context) {
-    if (provider.containerInfo == null) {
+    final info = provider.containerInfo;
+    if (info == null) {
       return const Center(child: Text(AppStrings.noContainerInfo));
     }
-    final config = provider.containerInfo!['Config'] as Map<String, dynamic>? ?? {};
-    final hostConfig = provider.containerInfo!['HostConfig'] as Map<String, dynamic>? ?? {};
-    final networkSettings = provider.containerInfo!['NetworkSettings'] as Map<String, dynamic>? ?? {};
-    final state = provider.containerInfo!['State'] as Map<String, dynamic>? ?? {};
+    final config = info.config ?? {};
+    final hostConfig = info.hostConfig ?? {};
+    final networkSettings = info.networkSettings ?? {};
+    final state = info.state is Map ? info.state as Map<String, dynamic> : {};
     return SingleChildScrollView(
       padding: AppPaddings.tabContent,
       child: Column(
@@ -26,11 +28,31 @@ class InfoTab extends StatelessWidget {
           InfoCard(
             title: AppStrings.basicInformation,
             children: [
-              InfoRow(label: AppStrings.containerId, value: provider.containerId.substring(0, 12), icon: Icons.fingerprint),
-              InfoRow(label: AppStrings.name, value: provider.containerName, icon: Icons.label),
-              InfoRow(label: AppStrings.image, value: config['Image']?.toString() ?? 'Unknown', icon: Icons.image),
-              InfoRow(label: AppStrings.status, value: state['Status']?.toString() ?? 'Unknown', icon: Icons.circle),
-              InfoRow(label: AppStrings.created, value: ContainerFormatUtils.formatDate(provider.containerInfo!['Created']?.toString()), icon: Icons.schedule),
+              InfoRow(
+                label: AppStrings.containerId,
+                value: provider.containerId.substring(0, 12),
+                icon: Icons.fingerprint,
+              ),
+              InfoRow(
+                label: AppStrings.name,
+                value: provider.containerName,
+                icon: Icons.label,
+              ),
+              InfoRow(
+                label: AppStrings.image,
+                value: config['Image']?.toString() ?? 'Unknown',
+                icon: Icons.image,
+              ),
+              InfoRow(
+                label: AppStrings.status,
+                value: state['Status']?.toString() ?? 'Unknown',
+                icon: Icons.circle,
+              ),
+              InfoRow(
+                label: AppStrings.created,
+                value: ContainerFormatUtils.formatDate(info.created.toString()),
+                icon: Icons.schedule,
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -38,7 +60,15 @@ class InfoTab extends StatelessWidget {
             InfoCard(
               title: AppStrings.ports,
               children: [
-                ...ContainerFormatUtils.formatPorts(networkSettings['Ports']).map((port) => InfoRow(label: AppStrings.port, value: port, icon: Icons.link)),
+                ...ContainerFormatUtils.formatPorts(
+                  networkSettings['Ports'],
+                ).map(
+                  (port) => InfoRow(
+                    label: AppStrings.port,
+                    value: port,
+                    icon: Icons.link,
+                  ),
+                ),
               ],
             ),
           const SizedBox(height: 16),
@@ -46,7 +76,13 @@ class InfoTab extends StatelessWidget {
             InfoCard(
               title: AppStrings.volumes,
               children: [
-                ...(hostConfig['Binds'] as List? ?? []).map((volume) => InfoRow(label: AppStrings.volume, value: volume.toString(), icon: Icons.folder)),
+                ...(hostConfig['Binds'] as List? ?? []).map(
+                  (volume) => InfoRow(
+                    label: AppStrings.volume,
+                    value: volume.toString(),
+                    icon: Icons.folder,
+                  ),
+                ),
               ],
             ),
           const SizedBox(height: 16),
@@ -54,7 +90,13 @@ class InfoTab extends StatelessWidget {
             InfoCard(
               title: AppStrings.envVars,
               children: [
-                ...(config['Env'] as List? ?? []).map((env) => InfoRow(label: AppStrings.env, value: env.toString(), icon: Icons.settings)),
+                ...(config['Env'] as List? ?? []).map(
+                  (env) => InfoRow(
+                    label: AppStrings.env,
+                    value: env.toString(),
+                    icon: Icons.settings,
+                  ),
+                ),
               ],
             ),
           const SizedBox(height: 16),
@@ -62,11 +104,17 @@ class InfoTab extends StatelessWidget {
             InfoCard(
               title: AppStrings.networks,
               children: [
-                ...(networkSettings['Networks'] as Map? ?? {}).keys.map((network) => InfoRow(label: AppStrings.network, value: network.toString(), icon: Icons.wifi)),
+                ...(networkSettings['Networks'] as Map? ?? {}).keys.map(
+                  (network) => InfoRow(
+                    label: AppStrings.network,
+                    value: network.toString(),
+                    icon: Icons.wifi,
+                  ),
+                ),
               ],
             ),
         ],
       ),
     );
   }
-} 
+}

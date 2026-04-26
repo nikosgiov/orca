@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
-import '../constants/app_text_styles.dart';
+
 import '../constants/app_colors.dart';
+import '../constants/app_text_styles.dart';
 import 'app_card.dart';
 
 class AppStatCard extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color iconColor;
-  final Widget? plot;
-
   const AppStatCard({
     super.key,
     required this.label,
     required this.value,
     required this.icon,
-    this.iconColor = AppColors.primaryCyan,
+    this.iconColor = AppColors.primary,
     this.plot,
   });
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color iconColor;
+  final Widget? plot;
 
   @override
   Widget build(BuildContext context) {
@@ -69,4 +69,4 @@ class AppStatCard extends StatelessWidget {
       ),
     );
   }
-} 
+}

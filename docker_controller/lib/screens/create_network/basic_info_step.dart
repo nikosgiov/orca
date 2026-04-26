@@ -3,9 +3,8 @@ import '../../providers/create_network_provider.dart';
 import '../../utils/validators.dart';
 
 class BasicInfoStep extends StatelessWidget {
-  final CreateNetworkProvider provider;
-
   const BasicInfoStep({super.key, required this.provider});
+  final CreateNetworkProvider provider;
 
   @override
   Widget build(BuildContext context) {
@@ -15,21 +14,22 @@ class BasicInfoStep extends StatelessWidget {
           const SizedBox(height: 16),
           TextFormField(
             controller: provider.nameController,
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               labelText: 'Network Name',
               hintText: 'my-network',
               floatingLabelBehavior: FloatingLabelBehavior.always,
-              prefixIcon: const Icon(Icons.wifi),
+              prefixIcon: Icon(Icons.wifi),
             ),
             onChanged: provider.setNetworkName,
-            validator: Validators.validateImageName, // Reuse image name validation
+            validator:
+                Validators.validateImageName, // Reuse image name validation
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             initialValue: provider.selectedDriver,
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               labelText: 'Driver',
-              prefixIcon: const Icon(Icons.settings),
+              prefixIcon: Icon(Icons.settings),
             ),
             items: const [
               DropdownMenuItem(value: 'bridge', child: Text('Bridge')),

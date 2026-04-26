@@ -3,20 +3,6 @@ import '../constants/app_strings.dart';
 import '../models/connection_config.dart';
 
 class ConnectionForm extends StatelessWidget {
-  final TextEditingController uriController;
-  final TextEditingController usernameController;
-  final TextEditingController passwordController;
-  final AuthType selectedAuthType;
-  final bool showAdvanced;
-  final bool saveCredentials;
-  final bool useTls;
-  final ValueChanged<AuthType> onAuthTypeChanged;
-  final ValueChanged<bool> onShowAdvancedChanged;
-  final ValueChanged<bool> onSaveCredentialsChanged;
-  final ValueChanged<bool> onUseTlsChanged;
-  final bool stayLoggedIn;
-  final ValueChanged<bool> onStayLoggedInChanged;
-
   const ConnectionForm({
     super.key,
     required this.uriController,
@@ -33,6 +19,19 @@ class ConnectionForm extends StatelessWidget {
     required this.stayLoggedIn,
     required this.onStayLoggedInChanged,
   });
+  final TextEditingController uriController;
+  final TextEditingController usernameController;
+  final TextEditingController passwordController;
+  final AuthType selectedAuthType;
+  final bool showAdvanced;
+  final bool saveCredentials;
+  final bool useTls;
+  final ValueChanged<AuthType> onAuthTypeChanged;
+  final ValueChanged<bool> onShowAdvancedChanged;
+  final ValueChanged<bool> onSaveCredentialsChanged;
+  final ValueChanged<bool> onUseTlsChanged;
+  final bool stayLoggedIn;
+  final ValueChanged<bool> onStayLoggedInChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -42,10 +41,10 @@ class ConnectionForm extends StatelessWidget {
         // Docker API URI Field
         TextFormField(
           controller: uriController,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             labelText: AppStrings.dockerApiUri,
             hintText: AppStrings.dockerApiUriHintIpPort,
-            prefixIcon: const Icon(Icons.link),
+            prefixIcon: Icon(Icons.link),
           ),
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
@@ -58,9 +57,9 @@ class ConnectionForm extends StatelessWidget {
             return null;
           },
         ),
-        
+
         const SizedBox(height: 16),
-        
+
         // Auth Type Dropdown
         DropdownButtonFormField<AuthType>(
           initialValue: selectedAuthType,
@@ -78,18 +77,17 @@ class ConnectionForm extends StatelessWidget {
                 label = AppStrings.authBasic;
                 break;
             }
-            return DropdownMenuItem(
-              value: type,
-              child: Text(label),
-            );
+            return DropdownMenuItem(value: type, child: Text(label));
           }).toList(),
           onChanged: (type) {
-            if (type != null) onAuthTypeChanged(type);
+            if (type != null) {
+              onAuthTypeChanged(type);
+            }
           },
         ),
-        
+
         const SizedBox(height: 16),
-        
+
         // Auth Fields based on selected type
         if (selectedAuthType == AuthType.basic) ...[
           TextFormField(
@@ -121,15 +119,15 @@ class ConnectionForm extends StatelessWidget {
             },
           ),
         ],
-        
+
         const SizedBox(height: 16),
-        
+
         // Advanced Toggle
         ExpansionTile(
-          title: Row(
+          title: const Row(
             children: [
-              const Icon(Icons.settings),
-              const SizedBox(width: 8),
+              Icon(Icons.settings),
+              SizedBox(width: 8),
               Text(AppStrings.advanced),
             ],
           ),
@@ -147,11 +145,13 @@ class ConnectionForm extends StatelessWidget {
                     value: stayLoggedIn,
                     onChanged: onStayLoggedInChanged,
                   ),
-                  
+
                   // TLS Certificates Toggle
                   SwitchListTile(
                     title: const Text(AppStrings.tlsCerts),
-                    subtitle: const Text('Use TLS certificates for secure connection'),
+                    subtitle: const Text(
+                      'Use TLS certificates for secure connection',
+                    ),
                     value: useTls,
                     onChanged: onUseTlsChanged,
                   ),
@@ -163,4 +163,4 @@ class ConnectionForm extends StatelessWidget {
       ],
     );
   }
-} 
+}

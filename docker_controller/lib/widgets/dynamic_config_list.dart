@@ -3,15 +3,6 @@ import '../constants/app_colors.dart';
 import '../utils/validators.dart';
 
 class DynamicConfigList extends StatelessWidget {
-  final String title;
-  final List<Map<String, String>> items;
-  final String label1;
-  final String label2;
-  final IconData icon;
-  final VoidCallback onAdd;
-  final void Function(int, String, String) onUpdate;
-  final void Function(int) onRemove;
-
   const DynamicConfigList({
     super.key,
     required this.title,
@@ -23,6 +14,14 @@ class DynamicConfigList extends StatelessWidget {
     required this.onUpdate,
     required this.onRemove,
   });
+  final String title;
+  final List<Map<String, String>> items;
+  final String label1;
+  final String label2;
+  final IconData icon;
+  final VoidCallback onAdd;
+  final void Function(int, String, String) onUpdate;
+  final void Function(int) onRemove;
 
   @override
   Widget build(BuildContext context) {
@@ -31,19 +30,16 @@ class DynamicConfigList extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(icon, color: AppColors.secondaryBlue),
+            Icon(icon, color: AppColors.secondary),
             const SizedBox(width: 8),
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const Spacer(),
             IconButton(
               onPressed: onAdd,
-              icon: const Icon(Icons.add, color: AppColors.primaryCyan),
+              icon: const Icon(Icons.add, color: AppColors.primary),
             ),
           ],
         ),
@@ -58,24 +54,28 @@ class DynamicConfigList extends StatelessWidget {
               children: [
                 Expanded(
                   child: TextFormField(
-                    initialValue: item[label1.toLowerCase().replaceAll(' ', '')] ?? '',
+                    initialValue:
+                        item[label1.toLowerCase().replaceAll(' ', '')] ?? '',
                     decoration: InputDecoration(
                       labelText: label1,
                       floatingLabelBehavior: FloatingLabelBehavior.always,
                     ),
-                    onChanged: (value) => onUpdate(index, item.keys.first, value),
+                    onChanged: (value) =>
+                        onUpdate(index, item.keys.first, value),
                     validator: isPortMapping ? Validators.validatePort : null,
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: TextFormField(
-                    initialValue: item[label2.toLowerCase().replaceAll(' ', '')] ?? '',
+                    initialValue:
+                        item[label2.toLowerCase().replaceAll(' ', '')] ?? '',
                     decoration: InputDecoration(
                       labelText: label2,
                       floatingLabelBehavior: FloatingLabelBehavior.always,
                     ),
-                    onChanged: (value) => onUpdate(index, item.keys.last, value),
+                    onChanged: (value) =>
+                        onUpdate(index, item.keys.last, value),
                     validator: isPortMapping ? Validators.validatePort : null,
                   ),
                 ),
@@ -90,4 +90,4 @@ class DynamicConfigList extends StatelessWidget {
       ],
     );
   }
-} 
+}

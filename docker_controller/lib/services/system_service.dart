@@ -1,69 +1,73 @@
-import 'dart:convert';
 import 'dart:developer' as developer;
-import '../models/connection_config.dart';
+
 import 'docker_service.dart';
 
+/// Service responsible for fetching system-wide information and metrics from the Docker daemon.
 class SystemService {
-  static const String _logPrefix = 'myapp';
+  SystemService(this._dockerService);
 
-  static Future<Map<String, dynamic>?> getSystemInfo(ConnectionConfig config) async {
+  final DockerService _dockerService;
+  static const String _logPrefix = 'orca';
+
+  /// Fetches general information about the Docker daemon and the host system.
+  Future<Map<String, dynamic>?> getSystemInfo() async {
     try {
-      final response = await DockerService.makeRequest(config, '/info');
+      final response = await _dockerService.get<Map<String, dynamic>>('/info');
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        developer.log('$_logPrefix: Successfully fetched system info', name: 'SystemService');
-        return data;
-      } else {
-        developer.log('$_logPrefix: Failed to fetch system info - Status: ${response.statusCode}', name: 'SystemService');
-        return null;
+        return response.data;
       }
+      return null;
     } catch (e) {
-      developer.log('$_logPrefix: Error fetching system info: $e', name: 'SystemService');
+      developer.log(
+        '$_logPrefix: Error fetching system info: $e',
+        name: 'SystemService',
+      );
       return null;
     }
   }
 
-  static Future<bool> testConnection(ConnectionConfig config) async {
+  /// Tests the connection to the Docker daemon by fetching its version.
+  Future<bool> testConnection() async {
     try {
-      final response = await DockerService.makeRequest(config, '/version');
-      if (response.statusCode == 200) {
-        developer.log('$_logPrefix: Connection test successful', name: 'SystemService');
-        return true;
-      } else {
-        developer.log('$_logPrefix: Connection test failed - Status: ${response.statusCode}', name: 'SystemService');
-        return false;
-      }
+      final response = await _dockerService.get('/version');
+      return response.statusCode == 200;
     } catch (e) {
-      developer.log('$_logPrefix: Connection test error: $e', name: 'SystemService');
+      developer.log(
+        '$_logPrefix: Connection test error: $e',
+        name: 'SystemService',
+      );
       return false;
     }
   }
 
-  static Future<Map<String, dynamic>?> getFirebaseConfig(ConnectionConfig config) async {
+  /// Fetches Firebase configuration from the Docker daemon if available.
+  Future<Map<String, dynamic>?> getFirebaseConfig() async {
     try {
-
-      final response = await DockerService.makeRequest(config, '/config/firebase');
+      final response = await _dockerService.get<Map<String, dynamic>>(
+        '/config/firebase',
+      );
       if (response.statusCode == 200) {
-        final data = json.decode(response.body) as Map<String, dynamic>;
-        developer.log('$_logPrefix: Successfully fetched Firebase config', name: 'SystemService');
-        return data;
-      } else {
-        developer.log('$_logPrefix: Failed to fetch Firebase config - Status: ${response.statusCode}', name: 'SystemService');
-        return null;
+        return response.data;
       }
+      return null;
     } catch (e) {
-      developer.log('$_logPrefix: Error fetching Firebase config: $e', name: 'SystemService');
+      developer.log(
+        '$_logPrefix: Error fetching Firebase config: $e',
+        name: 'SystemService',
+      );
       return null;
     }
   }
 
-  static Future<Map<String, dynamic>> getSystemMetrics(ConnectionConfig config, [String window = '30m']) async {
-
-    final response = await DockerService.makeRequest(config, '/system/metrics?window=$window');
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('HTTP ${response.statusCode}: Failed to fetch system metrics: ${response.body}');
+  /// Fetches system metrics (CPU, Memory, etc.) for a given time [window].
+  Future<Map<String, dynamic>> getSystemMetrics([String window = '30m']) async {
+    final response = await _dockerService.get<Map<String, dynamic>>(
+      '/system/metrics',
+      queryParameters: {'window': window},
+    );
+    if (response.statusCode == 200 && response.data != null) {
+      return response.data!;
     }
+    throw Exception('Failed to fetch system metrics: ${response.statusCode}');
   }
-} 
+}

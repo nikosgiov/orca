@@ -4,14 +4,9 @@ import '../constants/app_text_styles.dart';
 
 /// Glass card with a section label title.
 class InfoCard extends StatelessWidget {
+  const InfoCard({super.key, required this.title, required this.children});
   final String title;
   final List<Widget> children;
-
-  const InfoCard({
-    super.key,
-    required this.title,
-    required this.children,
-  });
 
   @override
   Widget build(BuildContext context) {
@@ -22,8 +17,7 @@ class InfoCard extends StatelessWidget {
         border: Border.all(color: AppColors.glassBorder, width: 1),
         boxShadow: [
           BoxShadow(
-            // ignore: deprecated_member_use
-            color: Colors.black.withOpacity(0.35),
+            color: Colors.black.withValues(alpha: 0.35),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),

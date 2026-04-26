@@ -1,19 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/logs_notifications_provider.dart';
+
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
-import '../screens/logs_notifications_screen.dart';
+import '../providers/logs_notifications_provider.dart';
+import '../screens/logs_notifications/logs_notifications_screen.dart';
 
 /// Transparent, backdrop-blurred app bar matching code.html sticky header.
 class AppGradientTopBar extends StatelessWidget implements PreferredSizeWidget {
-  final String title;
-  final Widget? titleWidget;
-  final Widget? leftWidget;
-  final Widget? rightWidget;
-  final double height;
-  final EdgeInsetsGeometry? padding;
-
   const AppGradientTopBar({
     super.key,
     required this.title,
@@ -23,6 +17,12 @@ class AppGradientTopBar extends StatelessWidget implements PreferredSizeWidget {
     this.height = 64,
     this.padding,
   });
+  final String title;
+  final Widget? titleWidget;
+  final Widget? leftWidget;
+  final Widget? rightWidget;
+  final double height;
+  final EdgeInsetsGeometry? padding;
 
   @override
   Widget build(BuildContext context) {
@@ -40,13 +40,18 @@ class AppGradientTopBar extends StatelessWidget implements PreferredSizeWidget {
                 leftWidget ??
                     Row(
                       children: [
-                        Image.asset('assets/images/logo.png', width: 28, height: 28),
+                        Image.asset(
+                          'assets/images/logo.png',
+                          width: 28,
+                          height: 28,
+                        ),
                         const SizedBox(width: 10),
                       ],
                     ),
                 // Title
                 Expanded(
-                  child: titleWidget ??
+                  child:
+                      titleWidget ??
                       Text(
                         title,
                         style: AppTextStyles.topBarTitle,
@@ -54,12 +59,7 @@ class AppGradientTopBar extends StatelessWidget implements PreferredSizeWidget {
                       ),
                 ),
                 // Right actions
-                rightWidget ??
-                    const Row(
-                      children: [
-                        _NotificationBtn(),
-                      ],
-                    ),
+                rightWidget ?? const Row(children: [_NotificationBtn()]),
               ],
             ),
           ),
@@ -72,7 +72,6 @@ class AppGradientTopBar extends StatelessWidget implements PreferredSizeWidget {
   Size get preferredSize => Size.fromHeight(height + 24); // +inset
 }
 
-
 class _NotificationBtn extends StatelessWidget {
   const _NotificationBtn();
 
@@ -80,7 +79,9 @@ class _NotificationBtn extends StatelessWidget {
   Widget build(BuildContext context) {
     bool hasUnread = false;
     try {
-      hasUnread = context.watch<LogsNotificationsProvider>().hasUnreadNotifications;
+      hasUnread = context
+          .watch<LogsNotificationsProvider>()
+          .hasUnreadNotifications;
     } catch (_) {
       // Provider not found on this branch
     }
@@ -100,7 +101,11 @@ class _NotificationBtn extends StatelessWidget {
               shape: BoxShape.circle,
               color: Colors.white.withValues(alpha: 0.05),
             ),
-            child: Icon(Icons.notifications_outlined, color: AppColors.textMuted, size: 20),
+            child: const Icon(
+              Icons.notifications_outlined,
+              color: AppColors.textMuted,
+              size: 20,
+            ),
           ),
           if (hasUnread)
             Positioned(

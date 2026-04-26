@@ -1,6 +1,8 @@
 class ContainerFormatUtils {
   static String formatDate(String? dateString) {
-    if (dateString == null) return 'Unknown';
+    if (dateString == null) {
+      return 'Unknown';
+    }
     try {
       final date = DateTime.parse(dateString);
       return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute}';
@@ -10,7 +12,9 @@ class ContainerFormatUtils {
   }
 
   static List<String> formatPorts(dynamic ports) {
-    if (ports == null) return [];
+    if (ports == null) {
+      return [];
+    }
     final List<String> formattedPorts = [];
     if (ports is Map) {
       for (final entry in ports.entries) {
@@ -21,7 +25,9 @@ class ContainerFormatUtils {
             final hostPort = binding['HostPort'];
             final hostIp = binding['HostIp'];
             if (hostPort != null) {
-              final ip = hostIp != null && hostIp.isNotEmpty ? hostIp : '0.0.0.0';
+              final ip = hostIp != null && hostIp.isNotEmpty
+                  ? hostIp
+                  : '0.0.0.0';
               formattedPorts.add('$ip:$hostPort->$containerPort');
             }
           }
@@ -32,4 +38,4 @@ class ContainerFormatUtils {
     }
     return formattedPorts;
   }
-} 
+}

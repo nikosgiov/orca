@@ -1,32 +1,69 @@
 import 'package:flutter/material.dart';
+
+import '../core/di/service_locator.dart';
+import '../models/app_state.dart';
+import '../models/docker_container.dart';
+import '../providers/auth_provider.dart';
 import '../services/container_service.dart';
-import '../models/connection_config.dart';
-import '../providers/app_provider.dart';
-import '../models/app_error.dart';
+
+class ContainerDetailData {
+  const ContainerDetailData({
+    required this.containerInfo,
+    this.logs,
+    this.stats,
+  });
+  final DockerContainer containerInfo;
+  final String? logs;
+  final Map<String, dynamic>? stats;
+}
 
 class ContainerDetailProvider extends ChangeNotifier {
-  final AppProvider appProvider;
+  ContainerDetailProvider({
+    required this.authProvider,
+    required this.containerId,
+    required this.containerName,
+  });
+  final AuthProvider authProvider;
   final String containerId;
   final String containerName;
+
   late TabController tabController;
   int currentTabIndex = 0;
-  bool isLoading = false;
   bool isFollowingLogs = false;
-  String? logs;
-  Map<String, dynamic>? containerInfo;
-  Map<String, dynamic>? containerStats;
-  AppError? error;
+
+  AppState<ContainerDetailData> _state = const AppInitial();
+  AppState<ContainerDetailData> get state => _state;
 
   String logSearch = '';
   int logTail = 100;
   String? logSince;
 
+  String? get logs {
+    final s = _state;
+    return s is AppSuccess<ContainerDetailData> ? s.data.logs : null;
+  }
+
+  DockerContainer? get containerInfo {
+    final s = _state;
+    return s is AppSuccess<ContainerDetailData> ? s.data.containerInfo : null;
+  }
+
+  Map<String, dynamic>? get containerStats {
+    final s = _state;
+    return s is AppSuccess<ContainerDetailData> ? s.data.stats : null;
+  }
+
   String? get filteredLogs {
-    if (logs == null) return null;
-    if (logSearch.isEmpty) return logs;
-    
+    final currentLogs = logs;
+    if (currentLogs == null) {
+      return null;
+    }
+    if (logSearch.isEmpty) {
+      return currentLogs;
+    }
+
     final query = logSearch.toLowerCase();
-    final lines = logs!.split('\n');
+    final lines = currentLogs.split('\n');
     return lines.where((line) => line.toLowerCase().contains(query)).join('\n');
   }
 
@@ -38,22 +75,16 @@ class ContainerDetailProvider extends ChangeNotifier {
   void setLogTail(int tail) {
     if (logTail != tail) {
       logTail = tail;
-      loadContainerData(); // Reload logs from server with new tail
+      loadContainerData();
     }
   }
 
   void setLogSince(String? since) {
     if (logSince != since) {
       logSince = since;
-      loadContainerData(); // Reload logs from server with new since filter
+      loadContainerData();
     }
   }
-
-  ContainerDetailProvider({
-    required this.appProvider,
-    required this.containerId,
-    required this.containerName,
-  });
 
   void setTabController(TabController controller) {
     tabController = controller;
@@ -64,44 +95,45 @@ class ContainerDetailProvider extends ChangeNotifier {
   }
 
   Future<void> loadContainerData() async {
-    isLoading = true;
-    error = null;
+    if (!authProvider.isConnected) {
+      return;
+    }
+
+    _state = const AppLoading();
     notifyListeners();
+
     try {
-      if (appProvider.connectionConfig == null) {
-        throw Exception('Not connected to Docker daemon');
-      }
       final results = await Future.wait([
-        _loadContainerInfo(appProvider.connectionConfig!),
-        _loadContainerLogs(appProvider.connectionConfig!),
-        _loadContainerStats(appProvider.connectionConfig!),
+        getIt<ContainerService>().getContainerInfo(containerId),
+        getIt<ContainerService>().getContainerLogs(
+          containerId,
+          tail: logTail,
+          since: logSince,
+        ),
+        getIt<ContainerService>().getContainerStats(containerId),
       ]);
-      containerInfo = results[0] as Map<String, dynamic>?;
-      logs = results[1] as String?;
-      containerStats = results[2] as Map<String, dynamic>?;
-    } catch (e) {
-      error = AppError(message: 'Error loading container data: $e');
+
+      final info = results[0] as DockerContainer?;
+      if (info == null) {
+        _state = const AppError(message: 'Container not found');
+      } else {
+        _state = AppSuccess(
+          ContainerDetailData(
+            containerInfo: info,
+            logs: results[1] as String?,
+            stats: results[2] as Map<String, dynamic>?,
+          ),
+        );
+      }
+    } catch (e, st) {
+      _state = AppError(
+        message: 'Error loading container data: $e',
+        error: e,
+        stackTrace: st,
+      );
     } finally {
-      isLoading = false;
       notifyListeners();
     }
-  }
-
-  Future<Map<String, dynamic>?> _loadContainerInfo(ConnectionConfig config) async {
-    return await ContainerService.getContainerInfo(config, containerId);
-  }
-
-  Future<String?> _loadContainerLogs(ConnectionConfig config) async {
-    return await ContainerService.getContainerLogs(
-      config, 
-      containerId,
-      tail: logTail,
-      since: logSince,
-    );
-  }
-
-  Future<Map<String, dynamic>?> _loadContainerStats(ConnectionConfig config) async {
-    return await ContainerService.getContainerStats(config, containerId);
   }
 
   void setFollowingLogs(bool value) {
@@ -114,142 +146,152 @@ class ContainerDetailProvider extends ChangeNotifier {
 
   void startFollowingLogs() {
     // TODO: Implement real-time log following
-    // This would require WebSocket connection or polling
   }
 
   // Container action methods
   Future<(bool, String?)> startContainer() async {
+    if (!authProvider.isConnected) {
+      return (false, 'Not connected');
+    }
     try {
-      if (appProvider.connectionConfig == null) {
-        return (false, 'Not connected to Docker daemon');
-      }
-      final success = await ContainerService.startContainer(appProvider.connectionConfig!, containerId);
+      final success = await getIt<ContainerService>().startContainer(
+        containerId,
+      );
       if (success) {
         await loadContainerData();
         return (true, null);
-      } else {
-        return (false, 'Failed to start container $containerName');
       }
+      return (false, 'Failed to start container $containerName');
     } catch (e) {
       return (false, 'Error starting container: $e');
     }
   }
 
   Future<(bool, String?)> stopContainer() async {
+    if (!authProvider.isConnected) {
+      return (false, 'Not connected');
+    }
     try {
-      if (appProvider.connectionConfig == null) {
-        return (false, 'Not connected to Docker daemon');
-      }
-      final success = await ContainerService.stopContainer(appProvider.connectionConfig!, containerId);
+      final success = await getIt<ContainerService>().stopContainer(
+        containerId,
+      );
       if (success) {
         await loadContainerData();
         return (true, null);
-      } else {
-        return (false, 'Failed to stop container $containerName');
       }
+      return (false, 'Failed to stop container $containerName');
     } catch (e) {
       return (false, 'Error stopping container: $e');
     }
   }
 
   Future<(bool, String?)> restartContainer() async {
+    if (!authProvider.isConnected) {
+      return (false, 'Not connected');
+    }
     try {
-      if (appProvider.connectionConfig == null) {
-        return (false, 'Not connected to Docker daemon');
-      }
-      final success = await ContainerService.restartContainer(appProvider.connectionConfig!, containerId);
+      final success = await getIt<ContainerService>().restartContainer(
+        containerId,
+      );
       if (success) {
         await loadContainerData();
         return (true, null);
-      } else {
-        return (false, 'Failed to restart container $containerName');
       }
+      return (false, 'Failed to restart container $containerName');
     } catch (e) {
       return (false, 'Error restarting container: $e');
     }
   }
 
   Future<(bool, String?)> killContainer() async {
+    if (!authProvider.isConnected) {
+      return (false, 'Not connected');
+    }
     try {
-      if (appProvider.connectionConfig == null) {
-        return (false, 'Not connected to Docker daemon');
-      }
-      final success = await ContainerService.killContainer(appProvider.connectionConfig!, containerId);
+      final success = await getIt<ContainerService>().killContainer(
+        containerId,
+      );
       if (success) {
         await loadContainerData();
         return (true, null);
-      } else {
-        return (false, 'Failed to kill container $containerName');
       }
+      return (false, 'Failed to kill container $containerName');
     } catch (e) {
       return (false, 'Error killing container: $e');
     }
   }
 
   Future<(bool, String?)> pauseContainer() async {
+    if (!authProvider.isConnected) {
+      return (false, 'Not connected');
+    }
     try {
-      if (appProvider.connectionConfig == null) {
-        return (false, 'Not connected to Docker daemon');
-      }
-      final success = await ContainerService.pauseContainer(appProvider.connectionConfig!, containerId);
+      final success = await getIt<ContainerService>().pauseContainer(
+        containerId,
+      );
       if (success) {
         await loadContainerData();
         return (true, null);
-      } else {
-        return (false, 'Failed to pause container $containerName');
       }
+      return (false, 'Failed to pause container $containerName');
     } catch (e) {
       return (false, 'Error pausing container: $e');
     }
   }
 
   Future<(bool, String?)> resumeContainer() async {
+    if (!authProvider.isConnected) {
+      return (false, 'Not connected');
+    }
     try {
-      if (appProvider.connectionConfig == null) {
-        return (false, 'Not connected to Docker daemon');
-      }
-      final success = await ContainerService.resumeContainer(appProvider.connectionConfig!, containerId);
+      final success = await getIt<ContainerService>().resumeContainer(
+        containerId,
+      );
       if (success) {
         await loadContainerData();
         return (true, null);
-      } else {
-        return (false, 'Failed to resume container $containerName');
       }
+      return (false, 'Failed to resume container $containerName');
     } catch (e) {
       return (false, 'Error resuming container: $e');
     }
   }
 
-  // Rename and remove container methods should also be called from the UI, as they require dialogs
   Future<(bool, String?)> renameContainer(String newName) async {
+    if (!authProvider.isConnected) {
+      return (false, 'Not connected');
+    }
     try {
-      if (appProvider.connectionConfig == null) {
-        return (false, 'Not connected to Docker daemon');
-      }
-      final success = await ContainerService.renameContainer(appProvider.connectionConfig!, containerId, newName);
+      final success = await getIt<ContainerService>().renameContainer(
+        containerId,
+        newName,
+      );
       if (success) {
         return (true, 'Renamed container to $newName');
-      } else {
-        return (false, 'Failed to rename container. The name might already be in use.');
       }
+      return (
+        false,
+        'Failed to rename container. The name might already be in use.',
+      );
     } catch (e) {
       return (false, 'Error renaming container: $e');
     }
   }
 
   Future<(bool, String?)> removeContainer() async {
+    if (!authProvider.isConnected) {
+      return (false, 'Not connected');
+    }
     try {
-      if (appProvider.connectionConfig == null) {
-        return (false, 'Not connected to Docker daemon');
-      }
-      final success = await ContainerService.removeContainer(appProvider.connectionConfig!, containerId);
+      final success = await getIt<ContainerService>().removeContainer(
+        containerId,
+      );
       if (success) {
         return (true, 'Removed container $containerName');
-      } else {
-        return (false, 'Failed to remove container $containerName');
       }
+      return (false, 'Failed to remove container $containerName');
     } catch (e) {
       return (false, 'Error removing container: $e');
     }
   }
-} 
+}

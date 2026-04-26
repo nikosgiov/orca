@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsProvider extends ChangeNotifier {
+  SettingsProvider() {
+    _loadAll();
+  }
   // ── Keys ─────────────────────────────────────────────────────────────────
   static const _keyThemeMode = 'themeMode';
   static const _keyNotifications = 'notificationsEnabled';
@@ -25,10 +28,6 @@ class SettingsProvider extends ChangeNotifier {
   int get refreshInterval => _refreshInterval;
   bool get biometricAuth => _biometricAuth;
   String get selectedTimeRange => _selectedTimeRange;
-
-  SettingsProvider() {
-    _loadAll();
-  }
 
   // ── Load ──────────────────────────────────────────────────────────────────
   Future<void> _loadAll() async {

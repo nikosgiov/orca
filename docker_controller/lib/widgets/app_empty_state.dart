@@ -3,16 +3,15 @@ import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
 
 class AppEmptyState extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String message;
-
   const AppEmptyState({
     super.key,
     required this.icon,
     required this.title,
     required this.message,
   });
+  final IconData icon;
+  final String title;
+  final String message;
 
   @override
   Widget build(BuildContext context) {

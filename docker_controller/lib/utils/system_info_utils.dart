@@ -1,6 +1,12 @@
 class SystemInfoUtils {
-  static String getSystemInfoValue(Map<String, dynamic>? systemInfo, String key, String defaultValue) {
-    if (systemInfo == null) return defaultValue;
+  static String getSystemInfoValue(
+    Map<String, dynamic>? systemInfo,
+    String key,
+    String defaultValue,
+  ) {
+    if (systemInfo == null) {
+      return defaultValue;
+    }
     return systemInfo[key]?.toString() ?? defaultValue;
   }
 
@@ -19,15 +25,19 @@ class SystemInfoUtils {
   }
 
   static String getMemoryInfo(Map<String, dynamic>? systemInfo) {
-    if (systemInfo == null) return 'Unknown';
+    if (systemInfo == null) {
+      return 'Unknown';
+    }
     final memTotal = systemInfo['MemTotal'] ?? 0;
     final memTotalGB = (memTotal / (1024 * 1024 * 1024)).toStringAsFixed(1);
     return '$memTotalGB GB';
   }
 
   static String getCpuInfo(Map<String, dynamic>? systemInfo) {
-    if (systemInfo == null) return 'Unknown';
+    if (systemInfo == null) {
+      return 'Unknown';
+    }
     final ncpu = systemInfo['NCPU'] ?? 0;
     return ncpu.toString();
   }
-} 
+}

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../constants/app_colors.dart';
 import '../constants/app_delays.dart';
 import '../constants/app_dimensions.dart';
@@ -8,14 +9,14 @@ import '../constants/app_paddings.dart';
 import '../constants/app_strings.dart';
 import '../constants/app_text_styles.dart';
 import '../models/connection_config.dart';
-import '../providers/app_provider.dart';
+import '../providers/auth_provider.dart';
+import '../utils/validators.dart';
+import '../widgets/animated_orca.dart';
 import '../widgets/app_input_field.dart';
 import '../widgets/app_input_tile.dart';
 import '../widgets/app_modal_sheet.dart';
-import '../widgets/animated_orca.dart';
-import '../utils/validators.dart';
-import 'connection/auth_drawer.dart';
 import 'connection/advanced_drawer.dart';
+import 'connection/auth_drawer.dart';
 
 class ConnectionScreen extends StatefulWidget {
   const ConnectionScreen({super.key});
@@ -45,11 +46,17 @@ class _ConnectionScreenState extends State<ConnectionScreen>
   void initState() {
     super.initState();
     _taglineController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 600));
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
     _formController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 700));
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
     _buttonController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 500));
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -60,33 +67,37 @@ class _ConnectionScreenState extends State<ConnectionScreen>
   }
 
   void _startAnimations() async {
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     try {
       await Future.delayed(AppDelays.connectionAnimStep1);
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
-      _taglineController.forward();
+      await _taglineController.forward();
       await Future.delayed(AppDelays.connectionAnimStep1);
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
-      _formController.forward();
+      await _formController.forward();
       await Future.delayed(AppDelays.connectionAnimStep2);
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
-      _buttonController.forward();
-    } catch (_) {
-      // Ignore animation errors during hot restart
-    }
+      await _buttonController.forward();
+    } catch (_) {}
   }
 
   void _loadSavedConfig() {
-    final savedConfig = context.read<AppProvider>().connectionConfig;
+    final savedConfig = context.read<AuthProvider>().connectionConfig;
     if (savedConfig != null) {
       _uriController.text = savedConfig.uri;
       _selectedAuthType = savedConfig.authType;
       _useTls = savedConfig.useTls;
-    } else if (_uriController.text.isEmpty) {
-      _uriController.text = '';
     }
   }
 
@@ -102,11 +113,14 @@ class _ConnectionScreenState extends State<ConnectionScreen>
   }
 
   Future<void> _connect() async {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      return;
+    }
 
     String? authError;
     if (_selectedAuthType == AuthType.basic) {
-      authError = Validators.validateUsername(_usernameController.text) ??
+      authError =
+          Validators.validateUsername(_usernameController.text) ??
           Validators.validatePassword(_passwordController.text);
     }
     if (authError != null) {
@@ -122,28 +136,15 @@ class _ConnectionScreenState extends State<ConnectionScreen>
       useTls: _useTls,
     );
 
-    final appProvider = context.read<AppProvider>();
-    if (_selectedAuthType == AuthType.basic) {
-      if (_stayLoggedIn) {
-        await appProvider.connectAndPersist(config,
-            username: _usernameController.text,
-            password: _passwordController.text);
-      } else {
-        await appProvider.connectWithoutPersistence(config,
-            username: _usernameController.text,
-            password: _passwordController.text);
-      }
-    } else {
-      if (_stayLoggedIn) {
-        await appProvider.connectAndPersist(config);
-      } else {
-        await appProvider.connectWithoutPersistence(config);
-      }
-    }
+    final authProvider = context.read<AuthProvider>();
+    await authProvider.connect(
+      config,
+      username: _usernameController.text,
+      password: _passwordController.text,
+      persist: _stayLoggedIn,
+    );
   }
 
-
-  // ── Auth drawer ─────────────────────────────────────────────────────────────
   void _showAuthDrawer() {
     AppModalSheet.show(
       context: context,
@@ -176,8 +177,8 @@ class _ConnectionScreenState extends State<ConnectionScreen>
   }
 
   void _showHistoryDrawer() {
-    final appProvider = context.read<AppProvider>();
-    final history = appProvider.connectionHistory;
+    final authProvider = context.read<AuthProvider>();
+    final history = authProvider.connectionHistory;
 
     AppModalSheet.show(
       context: context,
@@ -187,7 +188,9 @@ class _ConnectionScreenState extends State<ConnectionScreen>
           Text(
             AppStrings.recentConnections,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold, color: AppColors.inputIcon),
+              fontWeight: FontWeight.bold,
+              color: AppColors.slate400,
+            ),
           ),
           const SizedBox(height: 20),
           if (history.isEmpty)
@@ -196,13 +199,17 @@ class _ConnectionScreenState extends State<ConnectionScreen>
               child: Center(
                 child: Column(
                   children: [
-                    Icon(Icons.history,
-                        size: 48, color: AppColors.inputIcon.withValues(alpha: 0.2)),
+                    Icon(
+                      Icons.history,
+                      size: 48,
+                      color: AppColors.slate400.withValues(alpha: 0.2),
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       AppStrings.noHistory,
                       style: AppTextStyles.body.copyWith(
-                          color: AppColors.inputIcon.withValues(alpha: 0.5)),
+                        color: AppColors.slate400.withValues(alpha: 0.5),
+                      ),
                     ),
                   ],
                 ),
@@ -220,27 +227,28 @@ class _ConnectionScreenState extends State<ConnectionScreen>
                 itemBuilder: (context, index) {
                   final uri = history[index];
                   return ListTile(
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
                     leading: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: AppColors.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.dns_outlined,
-                          color: AppColors.primary, size: 20),
+                      child: const Icon(
+                        Icons.dns_outlined,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
                     ),
                     title: Text(
                       uri,
                       style: AppTextStyles.body.copyWith(
-                          color: AppColors.inputIcon, fontWeight: FontWeight.w500),
-                    ),
-                    trailing: IconButton(
-                      icon: Icon(Icons.delete_outline,
-                          color: AppColors.inputIcon.withValues(alpha: 0.4),
-                          size: 20),
-                      onPressed: () => appProvider.removeHistoryEntry(uri),
+                        color: AppColors.slate400,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                     onTap: () {
                       _uriController.text = uri;
@@ -256,34 +264,9 @@ class _ConnectionScreenState extends State<ConnectionScreen>
     );
   }
 
-  Widget _buildAnimatedBackground() {
-    final Size screenSize = MediaQuery.of(context).size;
-    final double baseImageSize = screenSize.width * 2.0;
-
-    final Offset position = const Offset(-40, 300); 
-    final double scale = 1.5;
-    // ----------------------------------------
-
-    double currentSize = baseImageSize * scale;
-    double screenCenterX = screenSize.width / 2;
-    double screenCenterY = screenSize.height / 2;
-
-    return Positioned(
-      left: screenCenterX + position.dx - (currentSize / 2),
-      top: screenCenterY + position.dy - (currentSize / 2),
-      width: currentSize,
-      height: currentSize,
-      child: Image.asset(
-        'assets/images/background.png',
-        fit: BoxFit.contain,
-      ),
-    );
-  }
-
-  // ── Build ───────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    final appProvider = Provider.of<AppProvider>(context);
+    final authProvider = Provider.of<AuthProvider>(context);
     final advancedSummary =
         '${_stayLoggedIn ? AppStrings.rememberConnection : AppStrings.dontRemember}'
         ' • '
@@ -293,126 +276,142 @@ class _ConnectionScreenState extends State<ConnectionScreen>
       decoration: const BoxDecoration(gradient: AppGradients.background),
       child: Stack(
         children: [
-          _buildAnimatedBackground(),
+          Positioned(
+            left: -100,
+            top: 200,
+            child: Image.asset(
+              'assets/images/background.png',
+              width: 800,
+              fit: BoxFit.contain,
+            ),
+          ),
           Scaffold(
             backgroundColor: Colors.transparent,
-          resizeToAvoidBottomInset: true,
-          body: SafeArea(
-            child: Column(
-              children: [
-                const SizedBox(height: 20),
-                // Logo
-                const SizedBox(
-                  width: AppDimensions.logoSize,
-                  height: AppDimensions.logoSize,
-                  child: AnimatedOrca(page: 0.0),
-                ),
-                const SizedBox(height: 16),
-                // Tagline
-                FadeTransition(
-                  opacity: _taglineController,
-                  child: Padding(
-                    padding: AppPaddings.pageHorizontalNarrow,
-                    child: Text(
-                      AppStrings.appTagline,
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.body.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
+            resizeToAvoidBottomInset: true,
+            body: SafeArea(
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
+                  const SizedBox(
+                    width: AppDimensions.logoSize,
+                    height: AppDimensions.logoSize,
+                    child: AnimatedOrca(page: 0.0),
                   ),
-                ),
-                const SizedBox(height: 16),
-                // Error message
-                if (appProvider.error != null)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 24.0, vertical: 8.0),
-                    child: Text(
-                      appProvider.error!.message,
-                      style: AppTextStyles.errorMessage,
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                // Form
-                Expanded(
-                  child: FadeTransition(
-                    opacity: _formController,
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 12),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          children: [
-                            AppInputField(
-                              controller: _uriController,
-                              labelText: AppStrings.dockerHostUri,
-                              validator: Validators.validateUri,
-                              prefixIcon: Icons.dns_outlined,
-                              suffixIcon: IconButton(
-                                icon: const Icon(Icons.history, color: AppColors.white),
-                                onPressed: _showHistoryDrawer,
-                                tooltip: AppStrings.recentConnections,
-                              ),
-                            ),
-                            const SizedBox(height: 32),
-                            AppInputTile(
-                              icon: Icons.security,
-                              label: AppStrings.authentication,
-                              value: _selectedAuthType.displayName,
-                              onTap: _showAuthDrawer,
-                              borderColor: Colors.white,
-                              labelColor: Colors.white,
-                            ),
-                            const SizedBox(height: 32),
-                            AppInputTile(
-                              icon: Icons.settings,
-                              label: AppStrings.advancedOptions,
-                              value: advancedSummary,
-                              onTap: _showAdvancedDrawer,
-                              borderColor: Colors.white,
-                              labelColor: Colors.white,
-                            ),
-                          ],
+                  const SizedBox(height: 16),
+                  FadeTransition(
+                    opacity: _taglineController,
+                    child: Padding(
+                      padding: AppPaddings.pageHorizontalNarrow,
+                      child: Text(
+                        AppStrings.appTagline,
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.body.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          // Connect button (pinned to bottom)
-          bottomNavigationBar: SafeArea(
-            bottom: true,
-            child: Padding(
-              padding: EdgeInsets.only(
-                left: 24,
-                right: 24,
-                bottom: MediaQuery.of(context).viewInsets.bottom > 0 ? 8 : 16,
+                  const SizedBox(height: 16),
+                  if (authProvider.error != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24.0,
+                        vertical: 8.0,
+                      ),
+                      child: Text(
+                        authProvider.error!.message,
+                        style: AppTextStyles.errorMessage,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  Expanded(
+                    child: FadeTransition(
+                      opacity: _formController,
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            children: [
+                              AppInputField(
+                                controller: _uriController,
+                                labelText: AppStrings.dockerHostUri,
+                                validator: Validators.validateUri,
+                                prefixIcon: Icons.dns_outlined,
+                                suffixIcon: IconButton(
+                                  icon: const Icon(
+                                    Icons.history,
+                                    color: AppColors.white,
+                                  ),
+                                  onPressed: _showHistoryDrawer,
+                                  tooltip: AppStrings.recentConnections,
+                                ),
+                              ),
+                              const SizedBox(height: 32),
+                              AppInputTile(
+                                icon: Icons.security,
+                                label: AppStrings.authentication,
+                                value: _selectedAuthType.displayName,
+                                onTap: _showAuthDrawer,
+                                borderColor: Colors.white,
+                                labelColor: Colors.white,
+                              ),
+                              const SizedBox(height: 32),
+                              AppInputTile(
+                                icon: Icons.settings,
+                                label: AppStrings.advancedOptions,
+                                value: advancedSummary,
+                                onTap: _showAdvancedDrawer,
+                                borderColor: Colors.white,
+                                labelColor: Colors.white,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              child: FadeTransition(
-                opacity: _buttonController,
-                child: Consumer<AppProvider>(
-                  builder: (context, provider, _) => SizedBox(
+            ),
+            bottomNavigationBar: SafeArea(
+              bottom: true,
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: 24,
+                  right: 24,
+                  bottom: MediaQuery.of(context).viewInsets.bottom > 0 ? 8 : 16,
+                ),
+                child: FadeTransition(
+                  opacity: _buttonController,
+                  child: SizedBox(
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: AppColors.backgroundDark,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(28),
+                        ),
                         elevation: 4,
                       ),
-                      onPressed: provider.isConnecting ? null : () => _connect(),
+                      onPressed: authProvider.isConnecting
+                          ? null
+                          : () => _connect(),
                       child: Text(
-                        provider.isConnecting
+                        authProvider.isConnecting
                             ? AppStrings.connecting
                             : AppStrings.connect,
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -420,8 +419,7 @@ class _ConnectionScreenState extends State<ConnectionScreen>
               ),
             ),
           ),
-        ),
-          if (appProvider.isConnecting) ...[
+          if (authProvider.isConnecting) ...[
             ModalBarrier(
               dismissible: false,
               color: AppColors.black.withValues(alpha: 0.2),

@@ -5,12 +5,12 @@ import '../../providers/container_detail_provider.dart';
 import '../exec_terminal_screen.dart';
 
 class ActionsTab extends StatelessWidget {
-  final ContainerDetailProvider provider;
   const ActionsTab({super.key, required this.provider});
+  final ContainerDetailProvider provider;
 
   @override
   Widget build(BuildContext context) {
-    final state = provider.containerInfo?['State']?['Status']?.toString() ?? 'unknown';
+    final state = provider.containerInfo?.stateDisplay ?? 'unknown';
     final isRunning = state == 'running';
     final isPaused = state == 'paused';
     final isStopped = state == 'stopped' || state == 'exited';
@@ -28,36 +28,41 @@ class ActionsTab extends StatelessWidget {
             ContainerActionButton(
               label: 'Start Container',
               icon: Icons.play_arrow,
-              color: AppColors.successGreen,
-              onPressed: () => _handleAction(context, provider.startContainer, 'start'),
+              color: AppColors.success,
+              onPressed: () =>
+                  _handleAction(context, provider.startContainer, 'start'),
             ),
           if (isRunning)
             ContainerActionButton(
               label: 'Stop Container',
               icon: Icons.stop,
-              color: AppColors.errorRed,
-              onPressed: () => _handleAction(context, provider.stopContainer, 'stop'),
+              color: AppColors.error,
+              onPressed: () =>
+                  _handleAction(context, provider.stopContainer, 'stop'),
             ),
           if (isRunning)
             ContainerActionButton(
               label: 'Pause Container',
               icon: Icons.pause,
               color: const Color(0xFFFBBF24),
-              onPressed: () => _handleAction(context, provider.pauseContainer, 'pause'),
+              onPressed: () =>
+                  _handleAction(context, provider.pauseContainer, 'pause'),
             ),
           if (isPaused)
             ContainerActionButton(
               label: 'Resume Container',
               icon: Icons.play_arrow,
-              color: AppColors.successGreen,
-              onPressed: () => _handleAction(context, provider.resumeContainer, 'resume'),
+              color: AppColors.success,
+              onPressed: () =>
+                  _handleAction(context, provider.resumeContainer, 'resume'),
             ),
           if (isRunning || isStopped)
             ContainerActionButton(
               label: 'Restart Container',
               icon: Icons.refresh,
               color: AppColors.primary,
-              onPressed: () => _handleAction(context, provider.restartContainer, 'restart'),
+              onPressed: () =>
+                  _handleAction(context, provider.restartContainer, 'restart'),
             ),
           if (isRunning)
             ContainerActionButton(
@@ -65,12 +70,12 @@ class ActionsTab extends StatelessWidget {
               icon: Icons.terminal,
               color: const Color(0xFF10B981), // Emerald green
               onPressed: () {
-                if (provider.appProvider.connectionConfig != null) {
+                if (provider.authProvider.connectionConfig != null) {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => ExecTerminalScreen(
-                        config: provider.appProvider.connectionConfig!,
+                        config: provider.authProvider.connectionConfig!,
                         containerId: provider.containerId,
                         containerName: provider.containerName,
                       ),
@@ -83,31 +88,50 @@ class ActionsTab extends StatelessWidget {
             ContainerActionButton(
               label: 'Kill Container',
               icon: Icons.close,
-              color: AppColors.errorRed,
+              color: AppColors.error,
               onPressed: () async {
                 final confirmed = await showDialog<bool>(
                   context: context,
                   builder: (context) => AlertDialog(
                     title: const Text('Kill Container'),
-                    content: Text('Are you sure you want to kill "${provider.containerName}"?'),
+                    content: Text(
+                      'Are you sure you want to kill "${provider.containerName}"?',
+                    ),
                     actions: [
-                      TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Cancel'),
+                      ),
                       TextButton(
                         onPressed: () => Navigator.pop(context, true),
-                        style: TextButton.styleFrom(foregroundColor: AppColors.errorRed),
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.error,
+                        ),
                         child: const Text('Kill'),
                       ),
                     ],
                   ),
                 );
                 if (confirmed == true) {
-                  if (!context.mounted) return;
+                  if (!context.mounted) {
+                    return;
+                  }
                   final (success, errorMsg) = await provider.killContainer();
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(success ? 'Killed ${provider.containerName}' : errorMsg ?? 'Failed'),
-                    backgroundColor: success ? AppColors.successGreen : AppColors.errorRed,
-                  ));
+                  if (!context.mounted) {
+                    return;
+                  }
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        success
+                            ? 'Killed ${provider.containerName}'
+                            : errorMsg ?? 'Failed',
+                      ),
+                      backgroundColor: success
+                          ? AppColors.success
+                          : AppColors.error,
+                    ),
+                  );
                 }
               },
             ),
@@ -117,7 +141,9 @@ class ActionsTab extends StatelessWidget {
             icon: Icons.edit_outlined,
             color: AppColors.primary,
             onPressed: () async {
-              final controller = TextEditingController(text: provider.containerName);
+              final controller = TextEditingController(
+                text: provider.containerName,
+              );
               final newName = await showDialog<String>(
                 context: context,
                 builder: (context) => AlertDialog(
@@ -130,79 +156,142 @@ class ActionsTab extends StatelessWidget {
                       TextField(
                         autofocus: true,
                         controller: controller,
-                        decoration: const InputDecoration(labelText: 'New Name', hintText: 'container-name'),
-                        onSubmitted: (v) { if (v.trim().isNotEmpty) Navigator.pop(context, v.trim()); },
+                        decoration: const InputDecoration(
+                          labelText: 'New Name',
+                          hintText: 'container-name',
+                        ),
+                        onSubmitted: (v) {
+                          if (v.trim().isNotEmpty) {
+                            Navigator.pop(context, v.trim());
+                          }
+                        },
                       ),
                     ],
                   ),
                   actions: [
-                    TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel'),
+                    ),
                     TextButton(
                       onPressed: () {
                         final n = controller.text.trim();
-                        if (n.isNotEmpty) Navigator.pop(context, n);
+                        if (n.isNotEmpty) {
+                          Navigator.pop(context, n);
+                        }
                       },
                       child: const Text('Rename'),
                     ),
                   ],
                 ),
               );
-              if (newName == null || newName.trim().isEmpty) return;
+              if (newName == null || newName.trim().isEmpty) {
+                return;
+              }
               if (newName.trim() == provider.containerName) {
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text('Name is already the same'),
-                  backgroundColor: Colors.orange,
-                ));
+              if (!context.mounted) {
                 return;
               }
-              if (!RegExp(r'^[a-zA-Z0-9][a-zA-Z0-9_.-]*$').hasMatch(newName.trim())) {
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text('Invalid name. Use only letters, numbers, dots, underscores, hyphens.'),
-                  backgroundColor: Color(0xFFEF4444),
-                ));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Name is already the same'),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
                 return;
               }
-              if (!context.mounted) return;
-              final (success, errorMsg) = await provider.renameContainer(newName.trim());
-              if (!context.mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(success ? 'Renamed to ${newName.trim()}' : errorMsg ?? 'Failed to rename'),
-                backgroundColor: success ? AppColors.successGreen : AppColors.errorRed,
-              ));
-              if (success) Navigator.pop(context);
+              if (!RegExp(
+                r'^[a-zA-Z0-9][a-zA-Z0-9_.-]*$',
+              ).hasMatch(newName.trim())) {
+              if (!context.mounted) {
+                return;
+              }
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Invalid name. Use only letters, numbers, dots, underscores, hyphens.',
+                    ),
+                    backgroundColor: Color(0xFFEF4444),
+                  ),
+                );
+                return;
+              }
+              if (!context.mounted) {
+                return;
+              }
+              final (success, errorMsg) = await provider.renameContainer(
+                newName.trim(),
+              );
+              if (!context.mounted) {
+                return;
+              }
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    success
+                        ? 'Renamed to ${newName.trim()}'
+                        : errorMsg ?? 'Failed to rename',
+                  ),
+                  backgroundColor: success
+                      ? AppColors.success
+                      : AppColors.error,
+                ),
+              );
+              if (success) {
+                Navigator.pop(context);
+              }
             },
           ),
           ContainerActionButton(
             label: 'Remove Container',
             icon: Icons.delete_outline,
-            color: AppColors.errorRed,
+            color: AppColors.error,
             onPressed: () async {
               final confirmed = await showDialog<bool>(
                 context: context,
                 builder: (context) => AlertDialog(
                   title: const Text('Remove Container'),
-                  content: Text('Remove "${provider.containerName}"? This cannot be undone.'),
+                  content: Text(
+                    'Remove "${provider.containerName}"? This cannot be undone.',
+                  ),
                   actions: [
-                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Cancel'),
+                    ),
                     TextButton(
                       onPressed: () => Navigator.pop(context, true),
-                      style: TextButton.styleFrom(foregroundColor: AppColors.errorRed),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.error,
+                      ),
                       child: const Text('Remove'),
                     ),
                   ],
                 ),
               );
               if (confirmed == true) {
-                if (!context.mounted) return;
+                if (!context.mounted) {
+                  return;
+                }
                 final (success, errorMsg) = await provider.removeContainer();
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text(success ? 'Removed ${provider.containerName}' : errorMsg ?? 'Failed to remove'),
-                  backgroundColor: success ? AppColors.successGreen : AppColors.errorRed,
-                ));
-                if (success) Navigator.pop(context);
+                if (!context.mounted) {
+                  return;
+                }
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      success
+                          ? 'Removed ${provider.containerName}'
+                          : errorMsg ?? 'Failed to remove',
+                    ),
+                    backgroundColor: success
+                        ? AppColors.success
+                        : AppColors.error,
+                  ),
+                );
+                if (success) {
+                  Navigator.pop(context);
+                }
               }
             },
           ),
@@ -211,31 +300,43 @@ class ActionsTab extends StatelessWidget {
     );
   }
 
-  Future<void> _handleAction(BuildContext context, Future<(bool, String?)> Function() action, String actionName) async {
+  Future<void> _handleAction(
+    BuildContext context,
+    Future<(bool, String?)> Function() action,
+    String actionName,
+  ) async {
     final (success, errorMsg) = await action();
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(success ? 'Successfully ${actionName}ed container' : errorMsg ?? 'Failed to $actionName'),
-      backgroundColor: success ? AppColors.successGreen : AppColors.errorRed,
-    ));
+    if (!context.mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          success
+              ? 'Successfully ${actionName}ed container'
+              : errorMsg ?? 'Failed to $actionName',
+        ),
+        backgroundColor: success ? AppColors.success : AppColors.error,
+      ),
+    );
   }
 }
 
 // ── Status card (glass) ────────────────────────────────────────────────────────
 
 class _ContainerStatusCard extends StatelessWidget {
-  final String state;
   const _ContainerStatusCard({required this.state});
+  final String state;
 
   @override
   Widget build(BuildContext context) {
     final isRunning = state == 'running';
     final isPaused = state == 'paused';
     final color = isRunning
-        ? AppColors.successGreen
+        ? AppColors.success
         : isPaused
-            ? const Color(0xFFFBBF24)
-            : AppColors.textMuted;
+        ? const Color(0xFFFBBF24)
+        : AppColors.textMuted;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -253,7 +354,11 @@ class _ContainerStatusCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
-              isRunning ? Icons.play_circle_outline : isPaused ? Icons.pause_circle_outline : Icons.stop_circle_outlined,
+              isRunning
+                  ? Icons.play_circle_outline
+                  : isPaused
+                  ? Icons.pause_circle_outline
+                  : Icons.stop_circle_outlined,
               color: color,
               size: 20,
             ),
@@ -262,7 +367,7 @@ class _ContainerStatusCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('STATUS', style: AppTextStyles.sectionLabel),
+              const Text('STATUS', style: AppTextStyles.sectionLabel),
               const SizedBox(height: 2),
               Text(
                 state.toUpperCase(),
@@ -284,11 +389,6 @@ class _ContainerStatusCard extends StatelessWidget {
 // ── Action button (glass pill) ────────────────────────────────────────────────
 
 class ContainerActionButton extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final Color color;
-  final VoidCallback onPressed;
-
   const ContainerActionButton({
     super.key,
     required this.label,
@@ -296,6 +396,10 @@ class ContainerActionButton extends StatelessWidget {
     required this.color,
     required this.onPressed,
   });
+  final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {

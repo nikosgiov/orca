@@ -9,30 +9,43 @@ class AppPaddings {
   // ── Page / screen level ───────────────────────────────────────────────────────
   static const EdgeInsets screen = EdgeInsets.all(16);
   static const EdgeInsets pageHorizontal = EdgeInsets.symmetric(horizontal: 24);
-  static const EdgeInsets pageHorizontalNarrow = EdgeInsets.symmetric(horizontal: 32);
+  static const EdgeInsets pageHorizontalNarrow = EdgeInsets.symmetric(
+    horizontal: 32,
+  );
 
   // ── Cards ─────────────────────────────────────────────────────────────────────
   static const EdgeInsets card = EdgeInsets.all(16);
   static const EdgeInsets cardMargin = EdgeInsets.only(bottom: 12);
-  static const EdgeInsets cardVerticalSpacing = EdgeInsets.symmetric(vertical: 24);
+  static const EdgeInsets cardVerticalSpacing = EdgeInsets.symmetric(
+    vertical: 24,
+  );
 
   // ── Sections / items ──────────────────────────────────────────────────────────
   static const EdgeInsets section = EdgeInsets.only(bottom: 16);
   static const EdgeInsets item = EdgeInsets.symmetric(vertical: 4);
 
   // ── Buttons ───────────────────────────────────────────────────────────────────
-  static const EdgeInsets button = EdgeInsets.symmetric(horizontal: 24, vertical: 12);
-  static const EdgeInsets headerButtonPadding =
-      EdgeInsets.symmetric(vertical: 8, horizontal: 12);
+  static const EdgeInsets button = EdgeInsets.symmetric(
+    horizontal: 24,
+    vertical: 12,
+  );
+  static const EdgeInsets headerButtonPadding = EdgeInsets.symmetric(
+    vertical: 8,
+    horizontal: 12,
+  );
 
   // ── Icons ─────────────────────────────────────────────────────────────────────
   static const EdgeInsets iconPadding = EdgeInsets.all(8);
 
   // ── Chips / badges ────────────────────────────────────────────────────────────
-  static const EdgeInsets statusBadgePadding =
-      EdgeInsets.symmetric(horizontal: 8, vertical: 4);
-  static const EdgeInsets pluginBadgePadding =
-      EdgeInsets.symmetric(horizontal: 8, vertical: 4);
+  static const EdgeInsets statusBadgePadding = EdgeInsets.symmetric(
+    horizontal: 8,
+    vertical: 4,
+  );
+  static const EdgeInsets pluginBadgePadding = EdgeInsets.symmetric(
+    horizontal: 8,
+    vertical: 4,
+  );
   static const EdgeInsets filterChipGap = EdgeInsets.only(right: 8);
 
   // ── Logs / notifications ───────────────────────────────────────────────────────
@@ -40,11 +53,15 @@ class AppPaddings {
   static const EdgeInsets logCardPadding = EdgeInsets.all(12);
 
   // ── Dropdowns / selects ───────────────────────────────────────────────────────
-  static const EdgeInsets dropdownContentPadding =
-      EdgeInsets.symmetric(horizontal: 12, vertical: 8);
+  static const EdgeInsets dropdownContentPadding = EdgeInsets.symmetric(
+    horizontal: 12,
+    vertical: 8,
+  );
 
   // ── Charts ───────────────────────────────────────────────────────────────────
-  static const EdgeInsets chartSectionHorizontal = EdgeInsets.symmetric(horizontal: 16);
+  static const EdgeInsets chartSectionHorizontal = EdgeInsets.symmetric(
+    horizontal: 16,
+  );
 
   // ── Settings ─────────────────────────────────────────────────────────────────
   static const EdgeInsets statusContainerPadding = EdgeInsets.all(12);
@@ -54,9 +71,12 @@ class AppPaddings {
 
   // ── Info rows ─────────────────────────────────────────────────────────────────
   static const EdgeInsets infoRowIconPadding = EdgeInsets.all(8);
-  static const EdgeInsets expandedInfoRowValuePadding = EdgeInsets.only(left: 44);
-  static const EdgeInsetsGeometry inspectRowPadding =
-      EdgeInsets.symmetric(vertical: 4);
+  static const EdgeInsets expandedInfoRowValuePadding = EdgeInsets.only(
+    left: 44,
+  );
+  static const EdgeInsetsGeometry inspectRowPadding = EdgeInsets.symmetric(
+    vertical: 4,
+  );
 
   // ── Progress indicator ────────────────────────────────────────────────────────
   static const EdgeInsets progressIndicatorRight = EdgeInsets.only(right: 8);

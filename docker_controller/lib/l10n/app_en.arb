@@ -1,0 +1,15 @@
+{
+  "appName": "Docker Controller",
+  "@appName": {
+    "description": "The name of the application"
+  },
+  "resourceMonitoringTitle": "Resource Monitoring",
+  "timeframe": "Timeframe",
+  "cpuUsage": "CPU Usage",
+  "memoryUsage": "Memory Usage",
+  "networkIO": "Network I/O",
+  "diskIO": "Disk I/O",
+  "noDataAvailable": "No data available",
+  "loadingResourceData": "Loading resource data...",
+  "notConnectedMessage": "Not connected to Docker. Please connect first."
+}

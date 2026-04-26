@@ -16,7 +16,9 @@ class ConnectionStorageService {
 
   static Future<ConnectionConfig?> loadConnectionConfig() async {
     final value = await _storage.read(key: _key);
-    if (value == null) return null;
+    if (value == null) {
+      return null;
+    }
     try {
       final map = jsonDecode(value) as Map<String, dynamic>;
       return ConnectionConfig.fromJson(map);
@@ -36,7 +38,9 @@ class ConnectionStorageService {
 
   static Future<List<String>> loadConnectionHistory() async {
     final value = await _storage.read(key: _historyKey);
-    if (value == null) return [];
+    if (value == null) {
+      return [];
+    }
     try {
       final list = jsonDecode(value) as List<dynamic>;
       return list.map((e) => e.toString()).toList();

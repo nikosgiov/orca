@@ -1,46 +1,69 @@
-import 'package:flutter/material.dart';
 import 'dart:async';
-import '../services/image_service.dart';
-import '../providers/app_provider.dart';
-import '../utils/image_filter_utils.dart';
-import '../utils/image_format_utils.dart';
+
+import 'package:flutter/material.dart';
+
 import '../constants/app_delays.dart';
+import '../core/di/service_locator.dart';
+import '../models/app_state.dart';
+import '../models/docker_image.dart';
+import '../providers/auth_provider.dart';
+import '../services/image_service.dart';
+import '../utils/image_filter_utils.dart';
 
 class ImagesProvider extends ChangeNotifier {
-  final AppProvider appProvider;
-  ImagesProvider(this.appProvider);
+  ImagesProvider(this.authProvider, {ImageService? imageService})
+    : _imageService = imageService ?? getIt<ImageService>();
+  final AuthProvider authProvider;
+  final ImageService _imageService;
 
-  List<Map<String, dynamic>>? _images;
-  bool _isLoading = false;
+  AppState<List<DockerImage>> _state = const AppInitial();
+  AppState<List<DockerImage>> get state => _state;
+
   String _searchQuery = '';
   bool _isRefreshing = false;
+
   bool get isRefreshing => _isRefreshing;
-  bool get isLoading => _isLoading;
+  bool get isLoading => _state is AppLoading;
   String get searchQuery => _searchQuery;
+
   set searchQuery(String value) {
     _searchQuery = value;
     notifyListeners();
   }
 
-  List<Map<String, dynamic>>? get images => _images;
+  List<DockerImage>? get images {
+    if (_state is AppSuccess<List<DockerImage>>) {
+      return (_state as AppSuccess<List<DockerImage>>).data;
+    }
+    return null;
+  }
 
-  List<Map<String, dynamic>> get filteredImages {
+  List<DockerImage> get filteredImages {
+    final imagesList = images ?? [];
     return ImageFilterUtils.filterImages(
-      images: _images ?? [],
+      images: imagesList.map((i) => i.toJson()).toList(),
       searchQuery: _searchQuery,
-    );
+    ).map((m) => DockerImage.fromJson(m)).toList();
   }
 
   Future<void> fetchImages() async {
-    final config = appProvider.connectionConfig;
-    if (config == null) return;
-    _isLoading = true;
+    if (!authProvider.isConnected) {
+      return;
+    }
+
+    _state = const AppLoading();
     notifyListeners();
+
     try {
-      final images = await ImageService.getImages(config);
-      _images = images;
+      final imagesList = await _imageService.getImages();
+      _state = AppSuccess(imagesList);
+    } catch (e, st) {
+      _state = AppError(
+        message: 'Failed to load images: $e',
+        error: e,
+        stackTrace: st,
+      );
     } finally {
-      _isLoading = false;
       notifyListeners();
     }
   }
@@ -56,17 +79,13 @@ class ImagesProvider extends ChangeNotifier {
     }
   }
 
-  Future<(bool, String?)> removeImage(Map<String, dynamic> image) async {
-    final imageName = ImageFormatUtils.getImageDisplayName(image);
+  Future<(bool, String?)> removeImage(DockerImage image) async {
+    final imageName = image.displayName;
     try {
-      if (appProvider.connectionConfig == null) {
+      if (!authProvider.isConnected) {
         return (false, 'Not connected to Docker daemon');
       }
-      final imageId = image['Id'] as String?;
-      if (imageId == null) {
-        return (false, 'Invalid image ID');
-      }
-      final success = await ImageService.removeImage(appProvider.connectionConfig!, imageId);
+      final success = await _imageService.removeImage(image.id);
       if (success) {
         await Future.delayed(AppDelays.containerOperationDelay);
         await fetchImages();
@@ -81,10 +100,10 @@ class ImagesProvider extends ChangeNotifier {
 
   Future<(bool, String?)> pullImage(String name, String tag) async {
     try {
-      if (appProvider.connectionConfig == null) {
+      if (!authProvider.isConnected) {
         return (false, 'Not connected to Docker daemon');
       }
-      final success = await ImageService.pullImage(appProvider.connectionConfig!, name, tag);
+      final success = await _imageService.pullImage(name, tag);
       if (success) {
         await Future.delayed(AppDelays.containerOperationDelay);
         await fetchImages();
@@ -96,4 +115,4 @@ class ImagesProvider extends ChangeNotifier {
       return (false, 'Error pulling image: $e');
     }
   }
-} 
+}

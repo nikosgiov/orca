@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
 // lib/services/firebase_background_handler.dart
 
 import 'dart:convert';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 // This needs to be a top-level function
@@ -10,17 +11,17 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // Initialize Firebase if needed
   // await Firebase.initializeApp();
-  
+
   debugPrint('Handling a background message: ${message.messageId}');
   debugPrint('Message data: ${message.data}');
   debugPrint('Message notification: ${message.notification?.title}');
-  
+
   if (message.notification != null) {
     // FCM already shows a notification automatically on Android when in background
     // if the message contains a notification payload.
     return;
   }
-  
+
   // Show local notification
   await _showLocalNotification(message);
 }
@@ -51,14 +52,14 @@ Future<void> _showLocalNotification(RemoteMessage message) async {
 
   final AndroidNotificationDetails androidPlatformChannelSpecifics =
       AndroidNotificationDetails(
-    'docker_controller_channel',
-    'Docker Controller Notifications',
-    channelDescription: 'Notifications from Docker Controller app',
-    importance: Importance.high,
-    priority: Priority.high,
-    color: const Color(0xFF24267D), // AppColors.primary
-    styleInformation: bigPictureStyle,
-  );
+        'docker_controller_channel',
+        'Docker Controller Notifications',
+        channelDescription: 'Notifications from Docker Controller app',
+        importance: Importance.high,
+        priority: Priority.high,
+        color: const Color(0xFF24267D), // AppColors.primary
+        styleInformation: bigPictureStyle,
+      );
 
   const DarwinNotificationDetails iOSPlatformChannelSpecifics =
       DarwinNotificationDetails();
@@ -75,4 +76,4 @@ Future<void> _showLocalNotification(RemoteMessage message) async {
     platformChannelSpecifics,
     payload: jsonEncode(message.data),
   );
-} 
+}

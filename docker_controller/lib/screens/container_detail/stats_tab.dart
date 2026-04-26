@@ -1,26 +1,31 @@
 import 'package:flutter/material.dart';
+
 import '../../constants/app_colors.dart';
-import '../../constants/app_text_styles.dart';
-import '../../constants/app_strings.dart';
 import '../../constants/app_paddings.dart';
-import '../../services/docker_service.dart';
+import '../../constants/app_strings.dart';
+import '../../constants/app_text_styles.dart';
 import '../../providers/container_detail_provider.dart';
+import '../../utils/docker_stats_utils.dart';
 
 class StatsTab extends StatelessWidget {
-  final ContainerDetailProvider provider;
   const StatsTab({super.key, required this.provider});
+  final ContainerDetailProvider provider;
 
   @override
   Widget build(BuildContext context) {
     if (provider.containerStats == null) {
-      return Center(
+      return const Center(
         child: Text(AppStrings.noStatsAvailable, style: AppTextStyles.caption),
       );
     }
-    final cpuUsage = DockerService.calculateCpuUsage(provider.containerStats!);
-    final memoryUsage = DockerService.calculateMemoryUsage(provider.containerStats!);
-    final diskIO = DockerService.calculateDiskIO(provider.containerStats!);
-    final networkIO = DockerService.calculateNetworkIO(provider.containerStats!);
+    final cpuUsage = DockerStatsUtils.calculateCpuUsage(provider.containerStats!);
+    final memoryUsage = DockerStatsUtils.calculateMemoryUsage(
+      provider.containerStats!,
+    );
+    final diskIO = DockerStatsUtils.calculateDiskIO(provider.containerStats!);
+    final networkIO = DockerStatsUtils.calculateNetworkIO(
+      provider.containerStats!,
+    );
 
     return SingleChildScrollView(
       padding: AppPaddings.tabContent,
@@ -65,12 +70,6 @@ class StatsTab extends StatelessWidget {
 }
 
 class _GlassStatCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final IconData icon;
-  final Color color;
-  final double fraction;
-
   const _GlassStatCard({
     required this.title,
     required this.value,
@@ -78,6 +77,11 @@ class _GlassStatCard extends StatelessWidget {
     required this.color,
     required this.fraction,
   });
+  final String title;
+  final String value;
+  final IconData icon;
+  final Color color;
+  final double fraction;
 
   @override
   Widget build(BuildContext context) {
@@ -147,12 +151,24 @@ class _GlassStatCard extends StatelessWidget {
 
 // Keep SimpleStatsCard as alias for backward compat if anything uses it
 class SimpleStatsCard extends StatelessWidget {
+  const SimpleStatsCard({
+    super.key,
+    required this.title,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
   final String title;
   final String value;
   final IconData icon;
   final Color color;
-  const SimpleStatsCard({super.key, required this.title, required this.value, required this.icon, required this.color});
 
   @override
-  Widget build(BuildContext context) => _GlassStatCard(title: title, value: value, icon: icon, color: color, fraction: 0);
+  Widget build(BuildContext context) => _GlassStatCard(
+    title: title,
+    value: value,
+    icon: icon,
+    color: color,
+    fraction: 0,
+  );
 }

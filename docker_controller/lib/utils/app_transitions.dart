@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 class AppTransitions {
@@ -41,16 +40,18 @@ class AppTransitions {
         const endScale = 1.0;
         const curve = Curves.easeInOutBack;
 
-        final scaleAnimation = Tween<double>(begin: beginScale, end: endScale)
-            .animate(CurvedAnimation(parent: animation, curve: curve));
-        final opacityAnimation = CurvedAnimation(parent: animation, curve: Curves.easeIn);
+        final scaleAnimation = Tween<double>(
+          begin: beginScale,
+          end: endScale,
+        ).animate(CurvedAnimation(parent: animation, curve: curve));
+        final opacityAnimation = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeIn,
+        );
 
         return FadeTransition(
           opacity: opacityAnimation,
-          child: ScaleTransition(
-            scale: scaleAnimation,
-            child: child,
-          ),
+          child: ScaleTransition(scale: scaleAnimation, child: child),
         );
       },
       transitionDuration: const Duration(milliseconds: 500),
@@ -59,10 +60,9 @@ class AppTransitions {
 }
 
 class _CircularRevealClipper extends CustomClipper<Path> {
+  _CircularRevealClipper({required this.fraction, required this.centerOffset});
   final double fraction;
   final Offset centerOffset;
-
-  _CircularRevealClipper({required this.fraction, required this.centerOffset});
 
   @override
   Path getClip(Size size) {
@@ -90,19 +90,19 @@ class _CircularRevealClipper extends CustomClipper<Path> {
 /// A replacement for IndexedStack that animates transitions with a 3D Cube effect.
 /// A replacement for IndexedStack that animates transitions with a Fade effect.
 class AnimatedFadeIndexedStack extends StatefulWidget {
-  final int index;
-  final List<Widget> children;
-  final Duration duration;
-
   const AnimatedFadeIndexedStack({
     super.key,
     required this.index,
     required this.children,
     this.duration = const Duration(milliseconds: 500),
   });
+  final int index;
+  final List<Widget> children;
+  final Duration duration;
 
   @override
-  State<AnimatedFadeIndexedStack> createState() => _AnimatedFadeIndexedStackState();
+  State<AnimatedFadeIndexedStack> createState() =>
+      _AnimatedFadeIndexedStackState();
 }
 
 class _AnimatedFadeIndexedStackState extends State<AnimatedFadeIndexedStack>
@@ -117,10 +117,7 @@ class _AnimatedFadeIndexedStackState extends State<AnimatedFadeIndexedStack>
     super.initState();
     _currentIndex = widget.index;
     _prevIndex = _currentIndex;
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    );
+    _controller = AnimationController(vsync: this, duration: widget.duration);
     _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
   }
 
@@ -206,4 +203,3 @@ class _AnimatedFadeIndexedStackState extends State<AnimatedFadeIndexedStack>
     );
   }
 }
-

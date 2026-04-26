@@ -83,7 +83,9 @@ class Validators {
     final trimmed = value.trim();
     // Docker label values can contain spaces and most characters
     // But we should avoid control characters and excessive whitespace
-    if (trimmed.contains('\n') || trimmed.contains('\r') || trimmed.contains('\t')) {
+    if (trimmed.contains('\n') ||
+        trimmed.contains('\r') ||
+        trimmed.contains('\t')) {
       return 'Label value cannot contain newlines or tabs.';
     }
     if (trimmed.length > 255) {
@@ -113,7 +115,9 @@ class Validators {
     final trimmed = value.trim();
     // Driver option values can contain spaces and most characters
     // But we should avoid control characters and excessive whitespace
-    if (trimmed.contains('\n') || trimmed.contains('\r') || trimmed.contains('\t')) {
+    if (trimmed.contains('\n') ||
+        trimmed.contains('\r') ||
+        trimmed.contains('\t')) {
       return 'Driver option value cannot contain newlines or tabs.';
     }
     if (trimmed.length > 255) {
@@ -121,4 +125,4 @@ class Validators {
     }
     return null;
   }
-} 
+}

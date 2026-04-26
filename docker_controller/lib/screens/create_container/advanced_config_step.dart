@@ -3,9 +3,8 @@ import '../../providers/create_container_provider.dart';
 import '../../widgets/dynamic_config_list.dart';
 
 class AdvancedConfigStep extends StatelessWidget {
-  final CreateContainerProvider provider;
-
   const AdvancedConfigStep({super.key, required this.provider});
+  final CreateContainerProvider provider;
 
   @override
   Widget build(BuildContext context) {
@@ -47,9 +46,9 @@ class AdvancedConfigStep extends StatelessWidget {
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             initialValue: provider.networkMode,
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               labelText: 'Network Mode',
-              prefixIcon: const Icon(Icons.wifi),
+              prefixIcon: Icon(Icons.wifi),
             ),
             items: const [
               DropdownMenuItem(value: 'bridge', child: Text('Bridge')),

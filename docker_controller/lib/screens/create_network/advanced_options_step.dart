@@ -4,9 +4,8 @@ import '../../providers/create_network_provider.dart';
 import '../../utils/validators.dart';
 
 class AdvancedOptionsStep extends StatelessWidget {
-  final CreateNetworkProvider provider;
-
   const AdvancedOptionsStep({super.key, required this.provider});
+  final CreateNetworkProvider provider;
 
   @override
   Widget build(BuildContext context) {
@@ -26,13 +25,22 @@ class AdvancedOptionsStep extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      const Icon(Icons.settings, color: AppColors.secondaryBlue),
+                      const Icon(
+                        Icons.settings,
+                        color: AppColors.secondary,
+                      ),
                       const SizedBox(width: 8),
-                      const Text('Driver Options', style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text(
+                        'Driver Options',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       const Spacer(),
                       IconButton(
                         onPressed: provider.addOption,
-                        icon: const Icon(Icons.add, color: AppColors.secondaryBlue),
+                        icon: const Icon(
+                          Icons.add,
+                          color: AppColors.secondary,
+                        ),
                         tooltip: 'Add option',
                       ),
                     ],
@@ -41,21 +49,29 @@ class AdvancedOptionsStep extends StatelessWidget {
                 if (provider.options.isEmpty)
                   const Padding(
                     padding: EdgeInsets.all(16),
-                    child: Text('No options added', style: TextStyle(color: Colors.grey)),
+                    child: Text(
+                      'No options added',
+                      style: TextStyle(color: Colors.grey),
+                    ),
                   ),
                 ...provider.options.asMap().entries.map((entry) {
                   final index = entry.key;
                   final option = entry.value;
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     child: Row(
                       children: [
                         Expanded(
                           child: TextFormField(
-                            decoration: const InputDecoration(
-                              labelText: 'Key',
+                            decoration: const InputDecoration(labelText: 'Key'),
+                            onChanged: (value) => provider.updateOption(
+                              index,
+                              value,
+                              option['value'] ?? '',
                             ),
-                            onChanged: (value) => provider.updateOption(index, value, option['value'] ?? ''),
                             validator: Validators.validateDriverOptionKey,
                           ),
                         ),
@@ -65,7 +81,11 @@ class AdvancedOptionsStep extends StatelessWidget {
                             decoration: const InputDecoration(
                               labelText: 'Value',
                             ),
-                            onChanged: (value) => provider.updateOption(index, option['key'] ?? '', value),
+                            onChanged: (value) => provider.updateOption(
+                              index,
+                              option['key'] ?? '',
+                              value,
+                            ),
                             validator: Validators.validateDriverOptionValue,
                           ),
                         ),
@@ -94,13 +114,19 @@ class AdvancedOptionsStep extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      const Icon(Icons.label, color: AppColors.secondaryBlue),
+                      const Icon(Icons.label, color: AppColors.secondary),
                       const SizedBox(width: 8),
-                      const Text('Labels', style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text(
+                        'Labels',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       const Spacer(),
                       IconButton(
                         onPressed: provider.addLabel,
-                        icon: const Icon(Icons.add, color: AppColors.secondaryBlue),
+                        icon: const Icon(
+                          Icons.add,
+                          color: AppColors.secondary,
+                        ),
                         tooltip: 'Add label',
                       ),
                     ],
@@ -109,21 +135,29 @@ class AdvancedOptionsStep extends StatelessWidget {
                 if (provider.labels.isEmpty)
                   const Padding(
                     padding: EdgeInsets.all(16),
-                    child: Text('No labels added', style: TextStyle(color: Colors.grey)),
+                    child: Text(
+                      'No labels added',
+                      style: TextStyle(color: Colors.grey),
+                    ),
                   ),
                 ...provider.labels.asMap().entries.map((entry) {
                   final index = entry.key;
                   final label = entry.value;
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     child: Row(
                       children: [
                         Expanded(
                           child: TextFormField(
-                            decoration: const InputDecoration(
-                              labelText: 'Key',
+                            decoration: const InputDecoration(labelText: 'Key'),
+                            onChanged: (value) => provider.updateLabel(
+                              index,
+                              value,
+                              label['value'] ?? '',
                             ),
-                            onChanged: (value) => provider.updateLabel(index, value, label['value'] ?? ''),
                             validator: Validators.validateLabelKey,
                           ),
                         ),
@@ -133,7 +167,11 @@ class AdvancedOptionsStep extends StatelessWidget {
                             decoration: const InputDecoration(
                               labelText: 'Value',
                             ),
-                            onChanged: (value) => provider.updateLabel(index, label['key'] ?? '', value),
+                            onChanged: (value) => provider.updateLabel(
+                              index,
+                              label['key'] ?? '',
+                              value,
+                            ),
                             validator: Validators.validateLabelValue,
                           ),
                         ),

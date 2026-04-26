@@ -3,16 +3,15 @@ import '../constants/app_colors.dart';
 
 /// Dark glass search field matching code.html style.
 class AppSearchBar extends StatefulWidget {
-  final String value;
-  final ValueChanged<String> onChanged;
-  final String hintText;
-
   const AppSearchBar({
     super.key,
     required this.value,
     required this.onChanged,
     required this.hintText,
   });
+  final String value;
+  final ValueChanged<String> onChanged;
+  final String hintText;
 
   @override
   State<AppSearchBar> createState() => _AppSearchBarState();
@@ -52,7 +51,11 @@ class _AppSearchBarState extends State<AppSearchBar> {
       decoration: InputDecoration(
         hintText: widget.hintText,
         hintStyle: const TextStyle(color: AppColors.textSubtle, fontSize: 14),
-        prefixIcon: const Icon(Icons.search, color: AppColors.textMuted, size: 20),
+        prefixIcon: const Icon(
+          Icons.search,
+          color: AppColors.textMuted,
+          size: 20,
+        ),
         filled: true,
         fillColor: AppColors.glassOverlay,
         border: OutlineInputBorder(
@@ -67,7 +70,10 @@ class _AppSearchBarState extends State<AppSearchBar> {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
       ),
     );
   }

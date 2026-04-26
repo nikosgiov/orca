@@ -5,9 +5,8 @@ import '../../providers/create_container_provider.dart';
 import '../../utils/validators.dart';
 
 class ImageStep extends StatelessWidget {
-  final CreateContainerProvider provider;
-
   const ImageStep({super.key, required this.provider});
+  final CreateContainerProvider provider;
 
   @override
   Widget build(BuildContext context) {
@@ -42,11 +41,15 @@ class ImageStep extends StatelessWidget {
               ),
             ),
           DropdownButtonFormField<String>(
-            initialValue: provider.isManualEdit ? null : (provider.selectedImage.isNotEmpty ? provider.selectedImage : null),
+            initialValue: provider.isManualEdit
+                ? null
+                : (provider.selectedImage.isNotEmpty
+                      ? provider.selectedImage
+                      : null),
             isExpanded: true,
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               labelText: AppStrings.selectImage,
-              prefixIcon: const Icon(Icons.image),
+              prefixIcon: Icon(Icons.image),
             ),
             items: [
               const DropdownMenuItem(
@@ -56,11 +59,17 @@ class ImageStep extends StatelessWidget {
               ...provider.availableImages.map((image) {
                 return DropdownMenuItem(
                   value: image,
-                  child: Text(image, overflow: TextOverflow.ellipsis, maxLines: 1),
+                  child: Text(
+                    image,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
                 );
               }),
             ],
-            onChanged: provider.isLoadingImages ? null : provider.setSelectedImage,
+            onChanged: provider.isLoadingImages
+                ? null
+                : provider.setSelectedImage,
           ),
           if (provider.isLoadingImages)
             const Padding(
@@ -83,10 +92,10 @@ class ImageStep extends StatelessWidget {
               Expanded(
                 child: TextFormField(
                   controller: provider.imageController,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: AppStrings.imageName,
                     floatingLabelBehavior: FloatingLabelBehavior.always,
-                    prefixIcon: const Icon(Icons.image),
+                    prefixIcon: Icon(Icons.image),
                   ),
                   onChanged: provider.setImageName,
                   validator: Validators.validateImageName,
@@ -96,7 +105,7 @@ class ImageStep extends StatelessWidget {
               Expanded(
                 child: TextFormField(
                   controller: provider.tagController,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Tag',
                     floatingLabelBehavior: FloatingLabelBehavior.always,
                   ),

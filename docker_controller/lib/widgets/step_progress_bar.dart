@@ -6,6 +6,17 @@ import '../constants/app_text_styles.dart';
 
 /// An animated progress bar that shows the current step in a multi-step wizard.
 class StepProgressBar extends StatelessWidget {
+  const StepProgressBar({
+    super.key,
+    required this.stepTitles,
+    required this.currentStep,
+    this.backgroundColor = AppColors.slate400,
+    this.fillColor = AppColors.primary,
+    this.height = AppDimensions.progressBarHeight,
+    this.width = 300,
+    this.titleStyle,
+    this.progressStyle,
+  });
   final List<String> stepTitles;
   final int currentStep;
   final Color backgroundColor;
@@ -14,18 +25,6 @@ class StepProgressBar extends StatelessWidget {
   final double width;
   final TextStyle? titleStyle;
   final TextStyle? progressStyle;
-
-  const StepProgressBar({
-    super.key,
-    required this.stepTitles,
-    required this.currentStep,
-    this.backgroundColor = AppColors.grey400,
-    this.fillColor = AppColors.primaryCyan,
-    this.height = AppDimensions.progressBarHeight,
-    this.width = 300,
-    this.titleStyle,
-    this.progressStyle,
-  });
 
   @override
   Widget build(BuildContext context) {

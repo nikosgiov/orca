@@ -3,11 +3,6 @@ import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
 
 class SettingsListTile extends StatelessWidget {
-  final String title;
-  final String? subtitle;
-  final Widget? trailing;
-  final VoidCallback? onTap;
-
   const SettingsListTile({
     super.key,
     required this.title,
@@ -15,6 +10,10 @@ class SettingsListTile extends StatelessWidget {
     this.trailing,
     this.onTap,
   });
+  final String title;
+  final String? subtitle;
+  final Widget? trailing;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {

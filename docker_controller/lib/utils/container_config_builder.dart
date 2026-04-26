@@ -1,4 +1,3 @@
-
 class ContainerConfigBuilder {
   static Map<String, dynamic> buildConfig({
     required String selectedImage,
@@ -32,11 +31,15 @@ class ContainerConfigBuilder {
       for (final mapping in portMappings) {
         final hostPort = mapping['host'];
         final containerPort = mapping['container'];
-        if (hostPort != null && hostPort.isNotEmpty &&
-            containerPort != null && containerPort.isNotEmpty) {
-          final formattedContainerPort = containerPort.contains('/') ? containerPort : '$containerPort/tcp';
+        if (hostPort != null &&
+            hostPort.isNotEmpty &&
+            containerPort != null &&
+            containerPort.isNotEmpty) {
+          final formattedContainerPort = containerPort.contains('/')
+              ? containerPort
+              : '$containerPort/tcp';
           portBindings[formattedContainerPort] = [
-            {'HostPort': hostPort, 'HostIp': ''}
+            {'HostPort': hostPort, 'HostIp': ''},
           ];
           exposedPorts[formattedContainerPort] = <String, dynamic>{};
         }
@@ -55,8 +58,10 @@ class ContainerConfigBuilder {
       for (final mapping in volumeMappings) {
         final hostPath = mapping['host'];
         final containerPath = mapping['container'];
-        if (hostPath != null && hostPath.isNotEmpty &&
-            containerPath != null && containerPath.isNotEmpty) {
+        if (hostPath != null &&
+            hostPath.isNotEmpty &&
+            containerPath != null &&
+            containerPath.isNotEmpty) {
           binds.add('$hostPath:$containerPath');
         }
       }
@@ -82,4 +87,4 @@ class ContainerConfigBuilder {
     }
     return containerConfig;
   }
-} 
+}

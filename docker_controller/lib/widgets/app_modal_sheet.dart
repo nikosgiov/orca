@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
+
 import '../constants/app_colors.dart';
-import '../constants/app_paddings.dart';
 import '../constants/app_decorations.dart';
+import '../constants/app_paddings.dart';
 
 class AppModalSheet extends StatelessWidget {
-  final Widget child;
-  final EdgeInsetsGeometry? padding;
-  final bool isScrollControlled;
-
   const AppModalSheet({
     super.key,
     required this.child,
     this.padding,
     this.isScrollControlled = true,
   });
+  final Widget child;
+  final EdgeInsetsGeometry? padding;
+  final bool isScrollControlled;
 
   static Future<T?> show<T>({
     required BuildContext context,
@@ -32,6 +32,7 @@ class AppModalSheet extends StatelessWidget {
       ),
     );
   }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -40,12 +41,16 @@ class AppModalSheet extends StatelessWidget {
       padding: EdgeInsets.only(
         left: padding?.resolve(Directionality.of(context)).left ?? 0,
         right: padding?.resolve(Directionality.of(context)).right ?? 0,
-        top: padding?.resolve(Directionality.of(context)).top ?? AppPaddings.card.top,
-        bottom: (padding?.resolve(Directionality.of(context)).bottom ?? AppPaddings.card.bottom) +
+        top:
+            padding?.resolve(Directionality.of(context)).top ??
+            AppPaddings.card.top,
+        bottom:
+            (padding?.resolve(Directionality.of(context)).bottom ??
+                AppPaddings.card.bottom) +
             MediaQuery.of(context).padding.bottom +
             MediaQuery.of(context).viewInsets.bottom,
       ),
       child: child,
     );
   }
-} 
+}
