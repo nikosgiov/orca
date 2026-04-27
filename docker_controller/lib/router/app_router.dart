@@ -1,5 +1,6 @@
 import 'package:docker_controller/providers/app_config_provider.dart';
 import 'package:docker_controller/providers/auth_provider.dart';
+import 'package:docker_controller/screens/logs_notifications/logs_notifications_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -40,8 +41,6 @@ class AppRouter {
   static const String notificationSettings = '/notification-settings';
 
   static final GlobalKey<NavigatorState> _rootNavigatorKey =
-      GlobalKey<NavigatorState>();
-  static final GlobalKey<NavigatorState> _shellNavigatorKey =
       GlobalKey<NavigatorState>();
 
   static Page<dynamic> _focalZoomPage({
@@ -127,53 +126,85 @@ class AppRouter {
           pageBuilder: (context, state) =>
               _focalZoomPage(state: state, child: const ConnectionScreen()),
         ),
-        ShellRoute(
-          navigatorKey: _shellNavigatorKey,
-          builder: (context, state, child) {
-            return MainScreenWrapper(child: child);
+        StatefulShellRoute.indexedStack(
+          builder: (context, state, navigationShell) {
+            return MainScreenWrapper(navigationShell: navigationShell);
           },
-          routes: [
-            GoRoute(
-              path: dashboard,
-              name: 'dashboard',
-              pageBuilder: (context, state) => NoTransitionPage(
-                child: HomeScreen(
-                  onNavigateToContainers: () => context.go(containers),
-                  onNavigateToImages: () => context.go(images),
+          branches: [
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: dashboard,
+                  name: 'dashboard',
+                  pageBuilder: (context, state) => NoTransitionPage(
+                    child: HomeScreen(
+                      onNavigateToContainers: () => context.go(containers),
+                      onNavigateToImages: () => context.go(images),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
-            GoRoute(
-              path: containers,
-              name: 'containers',
-              pageBuilder: (context, state) =>
-                  const NoTransitionPage(child: ContainersScreen()),
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: containers,
+                  name: 'containers',
+                  pageBuilder: (context, state) =>
+                      const NoTransitionPage(child: ContainersScreen()),
+                ),
+              ],
             ),
-            GoRoute(
-              path: images,
-              name: 'images',
-              pageBuilder: (context, state) =>
-                  const NoTransitionPage(child: ImagesScreen()),
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: images,
+                  name: 'images',
+                  pageBuilder: (context, state) =>
+                      const NoTransitionPage(child: ImagesScreen()),
+                ),
+              ],
             ),
-            GoRoute(
-              path: monitor,
-              name: 'monitor',
-              pageBuilder: (context, state) =>
-                  const NoTransitionPage(child: ResourceMonitoringScreen()),
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: monitor,
+                  name: 'monitor',
+                  pageBuilder: (context, state) =>
+                      const NoTransitionPage(child: ResourceMonitoringScreen()),
+                ),
+              ],
             ),
-            GoRoute(
-              path: compose,
-              name: 'compose',
-              pageBuilder: (context, state) =>
-                  const NoTransitionPage(child: ComposeScreen()),
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: compose,
+                  name: 'compose',
+                  pageBuilder: (context, state) =>
+                      const NoTransitionPage(child: ComposeScreen()),
+                ),
+              ],
             ),
-            GoRoute(
-              path: settings,
-              name: 'settings',
-              pageBuilder: (context, state) =>
-                  const NoTransitionPage(child: SettingsScreen()),
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: settings,
+                  name: 'settings',
+                  pageBuilder: (context, state) =>
+                      const NoTransitionPage(child: SettingsScreen()),
+                ),
+              ],
             ),
           ],
+        ),
+        GoRoute(
+          path: '/logs-notifications',
+          name: 'logsNotifications',
+          parentNavigatorKey: _rootNavigatorKey,
+          pageBuilder: (context, state) => _focalZoomPage(
+            state: state,
+            child: const LogsNotificationsScreen(),
+          ),
         ),
         GoRoute(
           path: createContainer,
@@ -252,68 +283,24 @@ class AppRouter {
   }
 }
 
-// Wrapper for MainScreen to support ShellRoute
-class MainScreenWrapper extends StatefulWidget {
-  const MainScreenWrapper({super.key, required this.child});
-  final Widget child;
+// Wrapper for MainScreen to support StatefulShellRoute
+class MainScreenWrapper extends StatelessWidget {
+  const MainScreenWrapper({super.key, required this.navigationShell});
+  final StatefulNavigationShell navigationShell;
 
-  @override
-  State<MainScreenWrapper> createState() => _MainScreenWrapperState();
-}
-
-class _MainScreenWrapperState extends State<MainScreenWrapper> {
-  int _calculateSelectedIndex(BuildContext context) {
-    final String location = GoRouterState.of(context).matchedLocation;
-    if (location.startsWith(AppRouter.dashboard)) {
-      return 0;
-    }
-    if (location.startsWith(AppRouter.containers)) {
-      return 1;
-    }
-    if (location.startsWith(AppRouter.images)) {
-      return 2;
-    }
-    if (location.startsWith(AppRouter.monitor)) {
-      return 3;
-    }
-    if (location.startsWith(AppRouter.compose)) {
-      return 4;
-    }
-    if (location.startsWith(AppRouter.settings)) {
-      return 5;
-    }
-    return 0;
-  }
-
-  void _onItemTapped(int index, BuildContext context) {
-    switch (index) {
-      case 0:
-        context.go(AppRouter.dashboard);
-        break;
-      case 1:
-        context.go(AppRouter.containers);
-        break;
-      case 2:
-        context.go(AppRouter.images);
-        break;
-      case 3:
-        context.go(AppRouter.monitor);
-        break;
-      case 4:
-        context.go(AppRouter.compose);
-        break;
-      case 5:
-        context.go(AppRouter.settings);
-        break;
-    }
+  void _onItemTapped(int index) {
+    navigationShell.goBranch(
+      index,
+      initialLocation: index == navigationShell.currentIndex,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return MainScreen(
-      currentIndex: _calculateSelectedIndex(context),
-      onTabChanged: (index) => _onItemTapped(index, context),
-      child: widget.child,
+      currentIndex: navigationShell.currentIndex,
+      onTabChanged: _onItemTapped,
+      child: navigationShell,
     );
   }
 }

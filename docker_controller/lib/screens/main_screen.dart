@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 
 /// The main layout shell of the application, including the floating navigation bar.
-class MainScreen extends StatelessWidget {
+class MainScreen extends StatefulWidget {
   const MainScreen({
     super.key,
     required this.currentIndex,
@@ -19,16 +19,56 @@ class MainScreen extends StatelessWidget {
   final Widget child;
 
   @override
+  State<MainScreen> createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeIn,
+    );
+    _animationController.forward();
+  }
+
+  @override
+  void didUpdateWidget(MainScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.currentIndex != widget.currentIndex) {
+      _animationController.forward(from: 0.0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(gradient: AppGradients.background),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         extendBody: true,
-        body: child,
+        body: FadeTransition(
+          opacity: _fadeAnimation,
+          child: widget.child,
+        ),
         bottomNavigationBar: _FloatingNavBar(
-          currentIndex: currentIndex,
-          onTap: onTabChanged,
+          currentIndex: widget.currentIndex,
+          onTap: widget.onTabChanged,
         ),
       ),
     );

@@ -3,6 +3,7 @@ import 'package:docker_controller/providers/logs_notifications_provider.dart';
 import 'package:docker_controller/widgets/app_background.dart';
 import 'package:docker_controller/widgets/app_gradient_top_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
@@ -35,7 +36,7 @@ class _LogsNotificationsScreenBody extends StatelessWidget {
         appBar: AppGradientTopBar(
           title: AppLocalizations.of(context)!.logsNotificationsTitle,
           leftWidget: IconButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => context.pop(),
             icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           ),
         ),
