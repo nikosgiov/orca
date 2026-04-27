@@ -30,7 +30,13 @@ class DockerControllerApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()..init()),
         ChangeNotifierProxyProvider<AuthProvider, SystemStatsProvider>(
           create: (context) => SystemStatsProvider(Provider.of<AuthProvider>(context, listen: false)),
-          update: (_, auth, previous) => previous ?? SystemStatsProvider(auth),
+          update: (_, auth, previous) {
+            final provider = previous ?? SystemStatsProvider(auth);
+            if (auth.isConnected && provider.systemInfo == null && !provider.isLoading) {
+              provider.refreshAll();
+            }
+            return provider;
+          },
         ),
 
         ChangeNotifierProvider(create: (_) => SettingsProvider()),

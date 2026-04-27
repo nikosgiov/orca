@@ -3,7 +3,6 @@ import 'package:docker_controller/models/app_state.dart';
 import 'package:docker_controller/providers/images_provider.dart';
 import 'package:docker_controller/widgets/app_background.dart';
 import 'package:docker_controller/widgets/app_empty_state.dart';
-import 'package:docker_controller/widgets/app_gradient_top_bar.dart';
 import 'package:docker_controller/widgets/app_loading_indicator.dart';
 import 'package:docker_controller/widgets/app_search_bar.dart';
 import 'package:flutter/material.dart';
@@ -46,7 +45,6 @@ class _ImagesScreenState extends State<ImagesScreen> {
       scale: 1.6,
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppGradientTopBar(title: AppLocalizations.of(context)!.imagesTitle),
         body: Column(
           children: [
             Padding(

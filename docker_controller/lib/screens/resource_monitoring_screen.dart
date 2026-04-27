@@ -10,7 +10,6 @@ import 'package:docker_controller/providers/settings_provider.dart';
 import 'package:docker_controller/utils/data_formatting_utils.dart';
 import 'package:docker_controller/utils/resource_chart_utils.dart';
 import 'package:docker_controller/widgets/app_background.dart';
-import 'package:docker_controller/widgets/app_gradient_top_bar.dart';
 import 'package:docker_controller/widgets/app_loading_indicator.dart';
 import 'package:docker_controller/widgets/resource_chart_card.dart';
 import 'package:flutter/material.dart';
@@ -43,7 +42,6 @@ class _NotConnectedView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppGradientTopBar(title: AppLocalizations.of(context)!.resourceMonitoringTitle),
       body: Center(
         child: Text(AppLocalizations.of(context)!.notConnectedToDocker),
       ),
@@ -134,7 +132,6 @@ class _ResourceMonitoringScreenBodyState
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppGradientTopBar(title: AppLocalizations.of(context)!.resourceMonitoringTitle),
       body: Stack(
         children: [
           const _AmbientGlowOrbs(),

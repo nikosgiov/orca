@@ -2,9 +2,9 @@ import 'package:docker_controller/constants/app_colors.dart';
 import 'package:docker_controller/constants/app_text_styles.dart';
 import 'package:docker_controller/providers/logs_notifications_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../screens/logs_notifications/logs_notifications_screen.dart';
 
 /// Transparent, backdrop-blurred app bar matching code.html sticky header.
 class AppGradientTopBar extends StatelessWidget implements PreferredSizeWidget {
@@ -86,11 +86,15 @@ class _NotificationBtn extends StatelessWidget {
       // Provider not found on this branch
     }
 
+    final String location = GoRouterState.of(context).matchedLocation;
+    final bool isOnNotifications = location == '/logs-notifications';
+
+    if (isOnNotifications) {
+      return const SizedBox(width: 36); // Keep spacing but hide icon
+    }
+
     return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const LogsNotificationsScreen()),
-      ),
+      onTap: () => context.pushNamed('logsNotifications'),
       child: Stack(
         clipBehavior: Clip.none,
         children: [

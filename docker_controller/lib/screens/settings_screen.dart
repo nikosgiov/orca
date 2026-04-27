@@ -6,7 +6,6 @@ import 'package:docker_controller/providers/settings_provider.dart';
 import 'package:docker_controller/services/notification_service.dart';
 import 'package:docker_controller/widgets/app_background.dart';
 import 'package:docker_controller/widgets/app_card.dart';
-import 'package:docker_controller/widgets/app_gradient_top_bar.dart';
 import 'package:docker_controller/widgets/settings_card_header.dart';
 import 'package:docker_controller/widgets/settings_list_tile.dart';
 import 'package:docker_controller/widgets/settings_switch_tile.dart';
@@ -90,7 +89,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       scale: 1.4,
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppGradientTopBar(title: AppLocalizations.of(context)!.settingsTitle),
         body: SingleChildScrollView(
           padding: AppPaddings.screen.copyWith(bottom: 120),
           child: Column(
