@@ -1,20 +1,23 @@
 import 'dart:convert';
+
+import 'package:docker_controller/models/connection_config.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../models/connection_config.dart';
 
 typedef JsonMap = Map<String, dynamic>;
 
 class ConnectionStorageService {
-  static const _storage = FlutterSecureStorage();
+  const ConnectionStorageService(this._storage);
+
+  final FlutterSecureStorage _storage;
   static const _key = 'connectionConfig';
   static const _historyKey = 'connectionHistory';
 
-  static Future<void> saveConnectionConfig(ConnectionConfig config) async {
+  Future<void> saveConnectionConfig(ConnectionConfig config) async {
     final json = jsonEncode(config.toJson());
     await _storage.write(key: _key, value: json);
   }
 
-  static Future<ConnectionConfig?> loadConnectionConfig() async {
+  Future<ConnectionConfig?> loadConnectionConfig() async {
     final value = await _storage.read(key: _key);
     if (value == null) {
       return null;
@@ -27,16 +30,16 @@ class ConnectionStorageService {
     }
   }
 
-  static Future<void> deleteConnectionConfig() async {
+  Future<void> deleteConnectionConfig() async {
     await _storage.delete(key: _key);
   }
 
-  static Future<void> saveConnectionHistory(List<String> history) async {
+  Future<void> saveConnectionHistory(List<String> history) async {
     final json = jsonEncode(history);
     await _storage.write(key: _historyKey, value: json);
   }
 
-  static Future<List<String>> loadConnectionHistory() async {
+  Future<List<String>> loadConnectionHistory() async {
     final value = await _storage.read(key: _historyKey);
     if (value == null) {
       return [];
@@ -49,7 +52,7 @@ class ConnectionStorageService {
     }
   }
 
-  static Future<void> deleteConnectionHistory() async {
+  Future<void> deleteConnectionHistory() async {
     await _storage.delete(key: _historyKey);
   }
 }

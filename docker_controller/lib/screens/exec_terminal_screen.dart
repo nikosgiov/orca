@@ -1,15 +1,16 @@
 import 'dart:convert';
 
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_text_styles.dart';
+import 'package:docker_controller/models/connection_config.dart';
+import 'package:docker_controller/services/exec_service.dart';
+import 'package:docker_controller/widgets/app_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:xterm/xterm.dart';
 
-import '../../constants/app_colors.dart';
-import '../../constants/app_text_styles.dart';
-import '../../models/connection_config.dart';
-import '../../services/exec_service.dart';
-import '../../widgets/app_background.dart';
+import '../l10n/app_localizations.dart';
 
 class ExecTerminalScreen extends StatefulWidget {
   const ExecTerminalScreen({
@@ -37,7 +38,11 @@ class _ExecTerminalScreenState extends State<ExecTerminalScreen> {
   void initState() {
     super.initState();
     terminal = Terminal(maxLines: 10000);
-    _connect();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _connect();
+      }
+    });
   }
 
   void _connect() {
@@ -45,7 +50,7 @@ class _ExecTerminalScreenState extends State<ExecTerminalScreen> {
 
     // Clear the terminal on reconnect
     terminal.eraseDisplay();
-    terminal.write('Connecting to ${widget.containerName}...\r\n');
+    terminal.write('${AppLocalizations.of(context)!.connectingTo(widget.containerName)}\r\n');
 
     _channel?.sink.close();
 
@@ -64,13 +69,17 @@ class _ExecTerminalScreenState extends State<ExecTerminalScreen> {
               if (data['type'] == 'stdout' || data['type'] == 'stderr') {
                 terminal.write(data['data']);
               } else if (data['type'] == 'closed') {
-                terminal.write('\r\n\x1B[1;31m[Process Terminated]\x1B[0m\r\n');
-                setState(() => _isConnected = false);
+                if (mounted) {
+                  terminal.write('\r\n\x1B[1;31m${AppLocalizations.of(context)!.processTerminated}\x1B[0m\r\n');
+                  setState(() => _isConnected = false);
+                }
               } else if (data['type'] == 'error') {
-                terminal.write(
-                  '\r\n\x1B[1;31m[Stream Error] ${data['data']}\x1B[0m\r\n',
-                );
-                setState(() => _isConnected = false);
+                if (mounted) {
+                  terminal.write(
+                    '\r\n\x1B[1;31m${AppLocalizations.of(context)!.streamError(data['data']?.toString() ?? '')}\x1B[0m\r\n',
+                  );
+                  setState(() => _isConnected = false);
+                }
               }
             } catch (e) {
               // Not JSON, just raw data fall-back
@@ -80,13 +89,13 @@ class _ExecTerminalScreenState extends State<ExecTerminalScreen> {
         },
         onDone: () {
           if (mounted) {
-            terminal.write('\r\n\x1B[1;33m[Connection Closed]\x1B[0m\r\n');
+            terminal.write('\r\n\x1B[1;33m${AppLocalizations.of(context)!.connectionClosed}\x1B[0m\r\n');
             setState(() => _isConnected = false);
           }
         },
         onError: (e) {
           if (mounted) {
-            terminal.write('\r\n\x1B[1;31m[WebSocket Error] $e\x1B[0m\r\n');
+            terminal.write('\r\n\x1B[1;31m${AppLocalizations.of(context)!.webSocketError(e.toString())}\x1B[0m\r\n');
             setState(() => _isConnected = false);
           }
         },
@@ -100,9 +109,9 @@ class _ExecTerminalScreenState extends State<ExecTerminalScreen> {
       };
 
       setState(() => _isConnected = true);
-      terminal.write('\x1B[1;32m[Connected via $_shell]\x1B[0m\r\n');
+      terminal.write('\x1B[1;32m${AppLocalizations.of(context)!.connectedVia(_shell)}\x1B[0m\r\n');
     } catch (e) {
-      terminal.write('\r\n\x1B[1;31m[Connection Failed] $e\x1B[0m\r\n');
+      terminal.write('\r\n\x1B[1;31m${AppLocalizations.of(context)!.connectionFailed(e.toString())}\x1B[0m\r\n');
     }
   }
 
@@ -125,7 +134,7 @@ class _ExecTerminalScreenState extends State<ExecTerminalScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Terminal: ${widget.containerName}',
+                '${AppLocalizations.of(context)!.terminalTitle}: ${widget.containerName}',
                 style: AppTextStyles.heading2,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -145,7 +154,7 @@ class _ExecTerminalScreenState extends State<ExecTerminalScreen> {
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      _isConnected ? 'Connected' : 'Disconnected',
+                      _isConnected ? AppLocalizations.of(context)!.connected : AppLocalizations.of(context)!.disconnected,
                       style: AppTextStyles.caption.copyWith(
                         color: _isConnected
                             ? AppColors.success
@@ -165,7 +174,7 @@ class _ExecTerminalScreenState extends State<ExecTerminalScreen> {
             IconButton(
               icon: const Icon(Icons.refresh, color: Colors.white70),
               onPressed: _connect,
-              tooltip: 'Reconnect',
+              tooltip: AppLocalizations.of(context)!.reconnect,
             ),
             const SizedBox(width: 8),
           ],
@@ -195,7 +204,7 @@ class _ExecTerminalScreenState extends State<ExecTerminalScreen> {
                   child: Row(
                     children: [
                       _TerminalShortcutButton(
-                        label: 'COPY',
+                        label: AppLocalizations.of(context)!.copy,
                         icon: Icons.copy,
                         onTap: () {
                           final selection = terminalController.selection;
@@ -208,9 +217,9 @@ class _ExecTerminalScreenState extends State<ExecTerminalScreen> {
                                 ClipboardData(text: selectedText),
                               );
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Copied to clipboard'),
-                                  duration: Duration(seconds: 1),
+                                SnackBar(
+                                  content: Text(AppLocalizations.of(context)!.copiedToClipboard),
+                                  duration: const Duration(seconds: 1),
                                 ),
                               );
                               terminalController.clearSelection();
@@ -220,7 +229,7 @@ class _ExecTerminalScreenState extends State<ExecTerminalScreen> {
                       ),
                       const SizedBox(width: 8),
                       _TerminalShortcutButton(
-                        label: 'PASTE',
+                        label: AppLocalizations.of(context)!.paste,
                         icon: Icons.paste,
                         onTap: () async {
                           if (_isConnected && _channel != null) {

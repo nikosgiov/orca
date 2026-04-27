@@ -1,7 +1,6 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_dimensions.dart';
 import 'package:flutter/material.dart';
-
-import '../constants/app_colors.dart';
-import '../constants/app_dimensions.dart';
 
 /// A styled text form field with optional password-toggle.
 class AppInputField extends StatefulWidget {

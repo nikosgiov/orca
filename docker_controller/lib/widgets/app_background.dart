@@ -1,5 +1,5 @@
+import 'package:docker_controller/constants/app_gradients.dart';
 import 'package:flutter/material.dart';
-import '../constants/app_gradients.dart';
 
 class AppBackground extends StatelessWidget {
   const AppBackground({

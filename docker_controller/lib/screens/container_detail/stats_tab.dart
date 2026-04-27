@@ -1,11 +1,11 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_paddings.dart';
+import 'package:docker_controller/constants/app_text_styles.dart';
+import 'package:docker_controller/providers/container_detail_provider.dart';
+import 'package:docker_controller/utils/docker_stats_utils.dart';
 import 'package:flutter/material.dart';
 
-import '../../constants/app_colors.dart';
-import '../../constants/app_paddings.dart';
-import '../../constants/app_strings.dart';
-import '../../constants/app_text_styles.dart';
-import '../../providers/container_detail_provider.dart';
-import '../../utils/docker_stats_utils.dart';
+import '../../l10n/app_localizations.dart';
 
 class StatsTab extends StatelessWidget {
   const StatsTab({super.key, required this.provider});
@@ -14,8 +14,8 @@ class StatsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (provider.containerStats == null) {
-      return const Center(
-        child: Text(AppStrings.noStatsAvailable, style: AppTextStyles.caption),
+      return Center(
+        child: Text(AppLocalizations.of(context)!.noStatsAvailable, style: AppTextStyles.caption),
       );
     }
     final cpuUsage = DockerStatsUtils.calculateCpuUsage(provider.containerStats!);
@@ -33,7 +33,7 @@ class StatsTab extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _GlassStatCard(
-            title: AppStrings.cpuUsage,
+            title: AppLocalizations.of(context)!.cpuUsage,
             value: '${cpuUsage.toStringAsFixed(1)}%',
             icon: Icons.memory,
             color: const Color(0xFF60A5FA),
@@ -41,7 +41,7 @@ class StatsTab extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _GlassStatCard(
-            title: AppStrings.memoryUsage,
+            title: AppLocalizations.of(context)!.memoryUsage,
             value: '${memoryUsage.toStringAsFixed(1)}%',
             icon: Icons.storage,
             color: const Color(0xFFC084FC),
@@ -49,7 +49,7 @@ class StatsTab extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _GlassStatCard(
-            title: AppStrings.networkIO,
+            title: AppLocalizations.of(context)!.networkIO,
             value: '${networkIO.toStringAsFixed(2)} MB/s',
             icon: Icons.wifi,
             color: const Color(0xFF34D399),
@@ -57,7 +57,7 @@ class StatsTab extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _GlassStatCard(
-            title: AppStrings.diskIO,
+            title: AppLocalizations.of(context)!.diskIO,
             value: '${diskIO.toStringAsFixed(2)} MB/s',
             icon: Icons.storage_outlined,
             color: const Color(0xFFFBBF24),

@@ -12,9 +12,9 @@ void main() async {
   // Initialize Dependency Injection
   await setupLocator();
 
-  final config = await ConnectionStorageService.loadConnectionConfig();
+  final config = await getIt<ConnectionStorageService>().loadConnectionConfig();
   if (config != null && config.firebaseConfig != null) {
-    await FirebaseService.initialize(config.firebaseConfig!);
+    await getIt<FirebaseService>().initialize(config.firebaseConfig!);
   }
 
   runApp(const DockerControllerApp());

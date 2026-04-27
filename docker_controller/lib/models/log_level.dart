@@ -1,5 +1,7 @@
+import 'package:docker_controller/constants/app_colors.dart';
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
+
+import '../l10n/app_localizations.dart';
 
 enum LogLevel {
   all,
@@ -8,18 +10,18 @@ enum LogLevel {
   info,
   debug;
 
-  String get label {
+  String getLabel(AppLocalizations l10n) {
     switch (this) {
       case LogLevel.all:
-        return 'All';
+        return l10n.all;
       case LogLevel.error:
-        return 'ERROR';
+        return l10n.logLevelError;
       case LogLevel.warn:
-        return 'WARN';
+        return l10n.logLevelWarn;
       case LogLevel.info:
-        return 'INFO';
+        return l10n.logLevelInfo;
       case LogLevel.debug:
-        return 'DEBUG';
+        return l10n.logLevelDebug;
     }
   }
 

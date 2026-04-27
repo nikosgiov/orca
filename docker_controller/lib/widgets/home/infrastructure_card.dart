@@ -1,6 +1,7 @@
+import 'package:docker_controller/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../constants/app_colors.dart';
+
 import 'home_widgets.dart';
 
 class InfrastructureCard extends StatelessWidget {

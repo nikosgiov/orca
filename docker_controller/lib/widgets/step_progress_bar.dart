@@ -1,8 +1,8 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_delays.dart';
+import 'package:docker_controller/constants/app_dimensions.dart';
+import 'package:docker_controller/constants/app_text_styles.dart';
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
-import '../constants/app_delays.dart';
-import '../constants/app_dimensions.dart';
-import '../constants/app_text_styles.dart';
 
 /// An animated progress bar that shows the current step in a multi-step wizard.
 class StepProgressBar extends StatelessWidget {

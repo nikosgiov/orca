@@ -2,7 +2,7 @@ import 'dart:developer' as developer;
 
 import 'package:dio/dio.dart';
 
-import '../models/connection_config.dart';
+import 'package:docker_controller/models/connection_config.dart';
 
 class DioClient {
   DioClient() {
@@ -60,6 +60,12 @@ class DioClient {
         'Dio: Error [${error.response?.statusCode}] ${error.message}',
         name: 'DioClient',
       );
+      if (error.response?.data != null) {
+        developer.log(
+          'Dio: Error Response Body: ${error.response?.data}',
+          name: 'DioClient',
+        );
+      }
       return handler.next(error);
     },
   );

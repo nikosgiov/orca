@@ -1,74 +1,66 @@
-import 'dart:developer' as developer;
-
-import 'package:dio/dio.dart';
-
-import '../models/compose_project.dart';
+import 'package:docker_controller/core/utils/result.dart';
+import 'package:docker_controller/models/app_error.dart';
+import 'package:docker_controller/models/compose_project.dart';
 import 'docker_service.dart';
 
 class ComposeService {
   ComposeService(this._dockerService);
 
   final DockerService _dockerService;
-  static const String _logPrefix = 'ComposeService';
 
-  Future<List<ComposeProject>?> getProjects() async {
-    try {
-      final response = await _dockerService.get<List<dynamic>>(
-        '/compose/projects',
-      );
-      if (response.statusCode == 200 && response.data != null) {
-        return response.data!
-            .map(
-              (json) => ComposeProject.fromJson(json as Map<String, dynamic>),
-            )
-            .toList();
-      }
-      return null;
-    } catch (e) {
-      developer.log('$_logPrefix: Error fetching compose projects: $e');
-      return null;
-    }
+  Future<Result<List<ComposeProject>, AppError>> getProjects() async {
+    final result = await _dockerService.get<List<dynamic>>(
+      '/compose/projects',
+    );
+    return result.fold(
+      (response) {
+        if (response.statusCode == 200 && response.data != null) {
+          final projects = response.data!
+              .map((json) => ComposeProject.fromJson(json as Map<String, dynamic>))
+              .toList();
+          return Success(projects);
+        }
+        return Failure(AppError(message: 'Failed to fetch compose projects: ${response.statusCode}'));
+      },
+      (failure) => Failure(failure),
+    );
   }
 
-  Future<bool> registerProject(
+  Future<Result<bool, AppError>> registerProject(
     String name,
     String workingDir,
     List<String> configFiles,
   ) async {
-    try {
-      final response = await _dockerService.post(
-        '/compose/register',
-        data: {
-          'name': name,
-          'working_dir': workingDir,
-          'config_files': configFiles,
-        },
-      );
-      return response.statusCode == 200;
-    } catch (e) {
-      developer.log('$_logPrefix: Error registering compose project: $e');
-      return false;
-    }
+    final result = await _dockerService.post(
+      '/compose/register',
+      data: {
+        'name': name,
+        'working_dir': workingDir,
+        'config_files': configFiles,
+      },
+    );
+    return result.fold(
+      (response) => Success(response.statusCode == 200),
+      (failure) => Failure(failure),
+    );
   }
 
-  Future<bool> unregisterProject(String name) async {
-    try {
-      final response = await _dockerService.delete('/compose/register/$name');
-      return response.statusCode == 200;
-    } catch (e) {
-      developer.log('$_logPrefix: Error unregistering compose project: $e');
-      return false;
-    }
+  Future<Result<bool, AppError>> unregisterProject(String name) async {
+    final result = await _dockerService.delete('/compose/register/$name');
+    return result.fold(
+      (response) => Success(response.statusCode == 200),
+      (failure) => Failure(failure),
+    );
   }
 
   /// Runs a docker compose command on the server and returns a stream of bytes.
-  Future<Stream<List<int>>> runCommandStream(
+  Future<Result<Stream<List<int>>, AppError>> runCommandStream(
     String project,
     String workingDir,
     String command, {
     String? service,
   }) async {
-    final response = await _dockerService.post<ResponseBody>(
+    final result = await _dockerService.post<dynamic>(
       '/compose/command',
       data: {
         'project': project,
@@ -76,12 +68,21 @@ class ComposeService {
         'command': command,
         if (service != null && service.isNotEmpty) 'service': service,
       },
-      // options: Options(responseType: ResponseType.stream), // Handled by generic post type
     );
 
-    if (response.statusCode == 200 && response.data != null) {
-      return response.data!.stream;
-    }
-    throw Exception('Failed to run compose command: ${response.statusCode}');
+    return result.fold(
+      (response) {
+        if (response.statusCode == 200 && response.data != null) {
+          // If response.data is ResponseBody or Stream
+          if (response.data is Stream<List<int>>) {
+            return Success(response.data as Stream<List<int>>);
+          }
+          // Handle case where it might be wrapped in ResponseBody
+          return Success(response.data.stream as Stream<List<int>>);
+        }
+        return Failure(AppError(message: 'Failed to run compose command: ${response.statusCode}'));
+      },
+      (failure) => Failure(failure),
+    );
   }
 }

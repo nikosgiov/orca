@@ -1,5 +1,5 @@
+import 'package:docker_controller/constants/app_colors.dart';
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
 
 class AppButton extends StatelessWidget {
   const AppButton({

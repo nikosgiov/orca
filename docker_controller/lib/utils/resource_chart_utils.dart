@@ -1,5 +1,5 @@
+import 'package:docker_controller/models/resource_data_point.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../models/resource_data_point.dart';
 
 class ResourceChartUtils {
   static List<FlSpot> getChartData(

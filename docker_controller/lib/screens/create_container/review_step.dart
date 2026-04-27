@@ -1,6 +1,8 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/providers/create_container_provider.dart';
 import 'package:flutter/material.dart';
-import '../../constants/app_colors.dart';
-import '../../providers/create_container_provider.dart';
+
+import '../../l10n/app_localizations.dart';
 
 class ReviewStep extends StatelessWidget {
   const ReviewStep({super.key, required this.provider});
@@ -12,12 +14,12 @@ class ReviewStep extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildReviewCard('Image', provider.selectedImage, Icons.image),
-          _buildReviewCard('Name', provider.containerName, Icons.label),
-          _buildReviewCard('Network', provider.networkMode, Icons.wifi),
+          _buildReviewCard(AppLocalizations.of(context)!.imageLabel, provider.selectedImage, Icons.image),
+          _buildReviewCard(AppLocalizations.of(context)!.nameLabel, provider.containerName, Icons.label),
+          _buildReviewCard(AppLocalizations.of(context)!.networkLabel, provider.networkMode, Icons.wifi),
           if (provider.portMappings.isNotEmpty)
             _buildReviewCard(
-              'Ports',
+              AppLocalizations.of(context)!.portsLabel,
               provider.portMappings
                   .map((p) => '${p['host']}:${p['container']}')
                   .join(', '),
@@ -25,7 +27,7 @@ class ReviewStep extends StatelessWidget {
             ),
           if (provider.volumeMappings.isNotEmpty)
             _buildReviewCard(
-              'Volumes',
+              AppLocalizations.of(context)!.volumesLabel,
               provider.volumeMappings
                   .map((v) => '${v['host']}:${v['container']}')
                   .join(', '),
@@ -33,19 +35,19 @@ class ReviewStep extends StatelessWidget {
             ),
           if (provider.environmentVars.isNotEmpty)
             _buildReviewCard(
-              'Environment',
+              AppLocalizations.of(context)!.environmentLabel,
               provider.environmentVars
                   .map((e) => '${e['name']}=${e['value']}')
                   .join(', '),
               Icons.settings,
             ),
           _buildReviewCard(
-            'Options',
+            AppLocalizations.of(context)!.optionsLabel,
             [
-              if (provider.interactive) 'Interactive',
-              if (provider.tty) 'TTY',
-              if (provider.autoRemove) 'Auto Remove',
-              if (provider.startAfterCreate) 'Start After Create',
+              if (provider.interactive) AppLocalizations.of(context)!.interactive,
+              if (provider.tty) AppLocalizations.of(context)!.tty,
+              if (provider.autoRemove) AppLocalizations.of(context)!.autoRemoveLabel,
+              if (provider.startAfterCreate) AppLocalizations.of(context)!.startAfterCreateLabel,
             ].join(', '),
             Icons.settings,
           ),

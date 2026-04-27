@@ -1,18 +1,20 @@
 import 'dart:async';
 import 'dart:convert';
+
+import 'package:docker_controller/core/di/service_locator.dart';
+import 'package:docker_controller/models/app_notification.dart';
+import 'package:docker_controller/models/connection_config.dart';
+import 'package:docker_controller/models/log_entry.dart';
+import 'package:docker_controller/models/log_level.dart';
+import 'package:docker_controller/services/container_service.dart';
+import 'package:docker_controller/services/notification_service.dart';
+import 'package:docker_controller/utils/log_filter_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../core/di/service_locator.dart';
-import '../models/app_notification.dart';
-import '../models/connection_config.dart';
-import '../models/log_entry.dart';
-import '../models/log_level.dart';
-import '../services/container_service.dart';
-import '../services/notification_service.dart';
-import '../utils/log_filter_utils.dart';
 import 'auth_provider.dart';
 
+/// Provider responsible for managing application logs and system notifications.
 class LogsNotificationsProvider extends ChangeNotifier {
   LogsNotificationsProvider(this.authProvider) {
     _currentUrl = authProvider.connectionConfig?.uri;
@@ -53,6 +55,7 @@ class LogsNotificationsProvider extends ChangeNotifier {
   final List<AppNotification> _notifications = [];
   String? _currentUrl;
 
+  /// Updates the connection configuration and refreshes logs/notifications.
   void updateConnectionConfig(ConnectionConfig? config) {
     if (config == null) {
       return;
@@ -91,44 +94,52 @@ class LogsNotificationsProvider extends ChangeNotifier {
     );
   }
 
+  /// Whether the provider is currently loading the list of containers.
   bool get isLoadingContainers => _isLoadingContainers;
+
+  /// Whether the provider is currently fetching logs.
   bool get isLoadingLogs => _isLoadingLogs;
+
+  /// A list of container names available for log viewing.
   List<String> get containers => _containers;
 
+  /// Fetches the list of containers from the Docker daemon.
   Future<void> fetchContainers() async {
     final config = authProvider.connectionConfig;
     if (config == null) {
       return;
     }
+
     _isLoadingContainers = true;
     notifyListeners();
-    try {
-      final containersList = await getIt<ContainerService>().getContainers();
-      _containers = containersList
-          .map(
-            (c) => c.names.isNotEmpty
-                ? c.names.first.replaceAll('/', '')
-                : 'Unknown',
-          )
-          .toList();
-    } finally {
-      _isLoadingContainers = false;
-      notifyListeners();
-    }
+
+    final result = await getIt<ContainerService>().getContainers();
+    result.fold(
+      (containersList) {
+        _containers = containersList
+            .map((c) => c.names.isNotEmpty ? c.names.first.replaceAll('/', '') : 'Unknown')
+            .toList();
+      },
+      (failure) => debugPrint('LogsNotificationsProvider: Error fetching containers: ${failure.message}'),
+    );
+
+    _isLoadingContainers = false;
+    notifyListeners();
   }
 
+  /// Fetches logs for a specific container and parses them into [LogEntry] objects.
   Future<void> fetchLogs(String containerId) async {
     final config = authProvider.connectionConfig;
     if (config == null) {
       return;
     }
+
     _isLoadingLogs = true;
     notifyListeners();
-    try {
-      final logsStr = await getIt<ContainerService>().getContainerLogs(
-        containerId,
-      );
-      if (logsStr != null) {
+
+    final result = await getIt<ContainerService>().getContainerLogs(containerId);
+    result.fold(
+      (logsStr) {
         _logs.clear();
         final lines = logsStr.split('\n');
         for (final line in lines) {
@@ -139,16 +150,12 @@ class LogsNotificationsProvider extends ChangeNotifier {
           LogLevel level = LogLevel.info;
           String message = line;
 
-          // Docker logs sometimes have headers we might want to skip or parse
           if (line.length > 8 && line.codeUnitAt(0) < 3) {
-            // Skip Docker framing header (8 bytes) if multiplexed
             message = line.substring(8);
           }
 
           final lower = message.toLowerCase();
-          if (lower.contains('error') ||
-              lower.contains('critical') ||
-              lower.contains('fail')) {
+          if (lower.contains('error') || lower.contains('critical') || lower.contains('fail')) {
             level = LogLevel.error;
           } else if (lower.contains('warn')) {
             level = LogLevel.warn;
@@ -157,30 +164,37 @@ class LogsNotificationsProvider extends ChangeNotifier {
           }
 
           _logs.add(LogEntry(
-            timestamp: DateTime.now()
-                .toString()
-                .split('.')
-                .first
-                .split(' ')
-                .last, // Just time
+            timestamp: DateTime.now().toString().split('.').first.split(' ').last,
             level: level,
             container: _selectedContainer,
             message: message.trim(),
           ));
         }
-      }
-    } finally {
-      _isLoadingLogs = false;
-      notifyListeners();
-    }
+      },
+      (failure) => debugPrint('LogsNotificationsProvider: Error fetching logs: ${failure.message}'),
+    );
+
+    _isLoadingLogs = false;
+    notifyListeners();
   }
 
+  /// Whether the UI should auto-scroll to follow new logs.
   bool get followLogs => _followLogs;
+
+  /// The currently selected log level filter.
   LogLevel get selectedLogLevel => _selectedLogLevel;
+
+  /// The currently selected container for log viewing.
   String get selectedContainer => _selectedContainer;
+
+  /// Returns an unmodifiable list of the currently loaded logs.
   List<LogEntry> get logs => List.unmodifiable(_logs);
+
+  /// Returns an unmodifiable list of system notifications.
   List<AppNotification> get notifications =>
       List.unmodifiable(_notifications);
+
+  /// Whether there are any unread notifications.
   bool get hasUnreadNotifications =>
       _notifications.any((n) => !n.read);
 
@@ -204,6 +218,7 @@ class LogsNotificationsProvider extends ChangeNotifier {
     }
   }
 
+  /// Returns the logs filtered by the current level and container selection.
   List<LogEntry> getFilteredLogs() {
     return LogFilterUtils.filterLogs(
       logs: _logs,

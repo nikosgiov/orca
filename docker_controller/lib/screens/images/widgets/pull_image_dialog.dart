@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+
 import '../../../constants/app_colors.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../providers/images_provider.dart';
 import '../../../utils/validators.dart';
 
@@ -9,10 +11,11 @@ class PullImageDialog {
     final tagController = TextEditingController(text: 'latest');
     final formKey = GlobalKey<FormState>();
 
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Pull Image'),
+        title: Text(l10n.pullImage),
         content: Form(
           key: formKey,
           child: Column(
@@ -20,23 +23,31 @@ class PullImageDialog {
             children: [
               TextFormField(
                 controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Image Name',
+                decoration: InputDecoration(
+                  labelText: l10n.imageName,
                   hintText: 'e.g., nginx, postgres, redis',
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                   floatingLabelBehavior: FloatingLabelBehavior.always,
                 ),
-                validator: Validators.validateImageName,
+                validator: (val) => Validators.validateImageName(
+                  val,
+                  requiredError: l10n.imageNameRequired,
+                  invalidError: l10n.imageNameInvalid,
+                ),
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: tagController,
-                decoration: const InputDecoration(
-                  labelText: 'Tag',
+                decoration: InputDecoration(
+                  labelText: l10n.tagLabel,
                   hintText: 'e.g., latest, 13, alpine',
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                 ),
-                validator: Validators.validateTag,
+                validator: (val) => Validators.validateTag(
+                  val,
+                  requiredError: l10n.tagRequired,
+                  invalidError: l10n.tagInvalid,
+                ),
               ),
             ],
           ),
@@ -44,7 +55,7 @@ class PullImageDialog {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -62,7 +73,7 @@ class PullImageDialog {
               backgroundColor: AppColors.secondary,
               foregroundColor: AppColors.white,
             ),
-            child: const Text('Pull'),
+            child: Text(l10n.pull),
           ),
         ],
       ),
@@ -75,9 +86,10 @@ class PullImageDialog {
     String name,
     String tag,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Pulling $name:$tag... This may take a while.'),
+        content: Text(l10n.pullingImage(name, tag)),
         backgroundColor: AppColors.secondary,
         duration: const Duration(seconds: 3),
       ),
@@ -89,14 +101,14 @@ class PullImageDialog {
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Successfully pulled $result'),
+          content: Text(l10n.pullSuccess(result ?? name)),
           backgroundColor: AppColors.success,
         ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(result ?? 'Failed to pull image'),
+          content: Text(result ?? l10n.pullFailed),
           backgroundColor: AppColors.error,
         ),
       );

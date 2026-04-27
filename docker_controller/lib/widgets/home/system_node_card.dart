@@ -1,8 +1,9 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_text_styles.dart';
+import 'package:docker_controller/utils/system_info_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../constants/app_colors.dart';
-import '../../constants/app_text_styles.dart';
-import '../../utils/system_info_utils.dart';
+
 import '../app_button.dart';
 import 'home_widgets.dart';
 

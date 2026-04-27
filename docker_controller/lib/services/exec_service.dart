@@ -1,5 +1,5 @@
+import 'package:docker_controller/models/connection_config.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import '../models/connection_config.dart';
 
 class ExecService {
   /// Connects to the custom server's WebSocket endpoint for container exec.

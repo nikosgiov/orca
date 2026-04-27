@@ -1,6 +1,6 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_text_styles.dart';
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
-import '../constants/app_text_styles.dart';
 
 /// Centred dark loading spinner.
 class AppLoadingIndicator extends StatelessWidget {

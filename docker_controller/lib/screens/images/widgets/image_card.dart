@@ -5,8 +5,8 @@ import 'package:provider/provider.dart';
 
 import '../../../constants/app_colors.dart';
 import '../../../constants/app_paddings.dart';
-import '../../../constants/app_strings.dart';
 import '../../../constants/app_text_styles.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../models/docker_image.dart';
 import '../../../providers/images_provider.dart';
 import '../../../widgets/app_card.dart';
@@ -59,33 +59,33 @@ class ImageCard extends StatelessWidget {
                 onSelected: (value) =>
                     _handleImageAction(context, imagesProvider, value, image),
                 itemBuilder: (context) => [
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'run',
                     child: Row(
                       children: [
-                        Icon(Icons.play_arrow, color: AppColors.primary),
-                        SizedBox(width: 8),
-                        Text(AppStrings.actionRunContainer),
+                        const Icon(Icons.play_arrow, color: AppColors.primary),
+                        const SizedBox(width: 8),
+                        Text(AppLocalizations.of(context)!.actionRunContainer),
                       ],
                     ),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'inspect',
                     child: Row(
                       children: [
-                        Icon(Icons.info, color: AppColors.secondary),
-                        SizedBox(width: 8),
-                        Text(AppStrings.actionInspect),
+                        const Icon(Icons.info, color: AppColors.secondary),
+                        const SizedBox(width: 8),
+                        Text(AppLocalizations.of(context)!.actionInspect),
                       ],
                     ),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'remove',
                     child: Row(
                       children: [
-                        Icon(Icons.delete, color: AppColors.error),
-                        SizedBox(width: 8),
-                        Text(AppStrings.actionRemove),
+                        const Icon(Icons.delete, color: AppColors.error),
+                        const SizedBox(width: 8),
+                        Text(AppLocalizations.of(context)!.actionRemove),
                       ],
                     ),
                   ),
@@ -96,17 +96,17 @@ class ImageCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           InfoRow(
-            label: AppStrings.labelSize,
+            label: AppLocalizations.of(context)!.labelSize,
             value: image.displaySize,
             icon: Icons.storage,
           ),
           InfoRow(
-            label: AppStrings.labelCreated,
+            label: AppLocalizations.of(context)!.labelCreated,
             value: image.displayCreated,
             icon: Icons.schedule,
           ),
           InfoRow(
-            label: AppStrings.labelDigest,
+            label: AppLocalizations.of(context)!.labelDigest,
             value: image.displayDigest,
             icon: Icons.fingerprint,
           ),
@@ -115,7 +115,7 @@ class ImageCard extends StatelessWidget {
             children: [
               Expanded(
                 child: _GlassPillBtn(
-                  label: AppStrings.actionRunContainer,
+                  label: AppLocalizations.of(context)!.actionRunContainer,
                   color: AppColors.primary,
                   onPressed: () => _runContainer(context, image),
                 ),
@@ -123,7 +123,7 @@ class ImageCard extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: _GlassPillBtn(
-                  label: AppStrings.actionRemove,
+                  label: AppLocalizations.of(context)!.actionRemove,
                   color: AppColors.error,
                   onPressed: () => _removeImage(context, imagesProvider, image),
                 ),
@@ -162,17 +162,17 @@ class ImageCard extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Remove Image'),
-        content: Text('Are you sure you want to remove ${image.displayName}?'),
+        title: Text(AppLocalizations.of(context)!.actionRemove),
+        content: Text(AppLocalizations.of(context)!.removeImageConfirm(image.displayName)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Remove'),
+            child: Text(AppLocalizations.of(context)!.actionRemove),
           ),
         ],
       ),
@@ -188,14 +188,14 @@ class ImageCard extends StatelessWidget {
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Successfully removed $result'),
+          content: Text(AppLocalizations.of(context)!.removedImageSuccess(result ?? '')),
           backgroundColor: AppColors.success,
         ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(result ?? 'Failed to remove image'),
+          content: Text(result ?? AppLocalizations.of(context)!.failedToRemoveImage),
           backgroundColor: AppColors.error,
         ),
       );
@@ -214,40 +214,40 @@ class ImageCard extends StatelessWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text(AppStrings.actionInspect),
+          title: Text(AppLocalizations.of(context)!.actionInspect),
           content: SizedBox(
             width: 400,
             child: ListView(
               shrinkWrap: true,
               children: [
                 InfoRow(
-                  label: AppStrings.labelId,
+                  label: AppLocalizations.of(context)!.labelId,
                   value: image.id,
                   icon: Icons.fingerprint,
                 ),
                 InfoRow(
-                  label: AppStrings.labelRepoTags,
+                  label: AppLocalizations.of(context)!.labelRepoTags,
                   value: image.repoTags.join(', '),
                   icon: Icons.tag,
                 ),
                 InfoRow(
-                  label: AppStrings.labelRepoDigests,
+                  label: AppLocalizations.of(context)!.labelRepoDigests,
                   value: image.repoDigests.join(', '),
                   icon: Icons.fingerprint,
                 ),
                 InfoRow(
-                  label: AppStrings.labelSize,
+                  label: AppLocalizations.of(context)!.labelSize,
                   value: image.displaySize,
                   icon: Icons.storage,
                 ),
                 InfoRow(
-                  label: AppStrings.labelCreated,
+                  label: AppLocalizations.of(context)!.labelCreated,
                   value: image.displayCreated,
                   icon: Icons.schedule,
                 ),
                 if (image.labels.isNotEmpty)
                   InfoRow(
-                    label: AppStrings.labelLabels,
+                    label: AppLocalizations.of(context)!.labelLabels,
                     value: image.labels.entries
                         .map((e) => '${e.key}: ${e.value}')
                         .join('\n'),
@@ -256,7 +256,7 @@ class ImageCard extends StatelessWidget {
                 const SizedBox(height: 12),
                 ElevatedButton.icon(
                   icon: const Icon(Icons.copy, size: 16),
-                  label: const Text(AppStrings.copiedRawJson),
+                  label: Text(AppLocalizations.of(context)!.copyRawJson),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.secondary,
                     foregroundColor: AppColors.white,
@@ -265,7 +265,7 @@ class ImageCard extends StatelessWidget {
                     final jsonStr = image.toJson().toString();
                     Clipboard.setData(ClipboardData(text: jsonStr));
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text(AppStrings.copiedRawJson)),
+                      SnackBar(content: Text(AppLocalizations.of(context)!.copiedRawJson)),
                     );
                   },
                 ),
@@ -275,7 +275,7 @@ class ImageCard extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text(AppStrings.close),
+              child: Text(AppLocalizations.of(context)!.close),
             ),
           ],
         );

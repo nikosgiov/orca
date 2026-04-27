@@ -1,5 +1,5 @@
-import '../models/log_entry.dart';
-import '../models/log_level.dart';
+import 'package:docker_controller/models/log_entry.dart';
+import 'package:docker_controller/models/log_level.dart';
 
 class LogFilterUtils {
   static List<LogEntry> filterLogs({

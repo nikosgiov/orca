@@ -1,8 +1,7 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_decorations.dart';
+import 'package:docker_controller/constants/app_paddings.dart';
 import 'package:flutter/material.dart';
-
-import '../constants/app_colors.dart';
-import '../constants/app_decorations.dart';
-import '../constants/app_paddings.dart';
 
 class AppModalSheet extends StatelessWidget {
   const AppModalSheet({

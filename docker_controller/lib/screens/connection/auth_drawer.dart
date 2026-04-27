@@ -1,11 +1,11 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_dimensions.dart';
+import 'package:docker_controller/constants/app_paddings.dart';
+import 'package:docker_controller/constants/app_text_styles.dart';
+import 'package:docker_controller/models/connection_config.dart';
 import 'package:flutter/material.dart';
 
-import '../../constants/app_colors.dart';
-import '../../constants/app_dimensions.dart';
-import '../../constants/app_paddings.dart';
-import '../../constants/app_strings.dart';
-import '../../constants/app_text_styles.dart';
-import '../../models/connection_config.dart';
+import '../../l10n/app_localizations.dart';
 
 class AuthDrawer extends StatefulWidget {
   const AuthDrawer({
@@ -47,7 +47,7 @@ class _AuthDrawerState extends State<AuthDrawer> {
           children: [
             Center(
               child: Text(
-                AppStrings.authentication,
+                AppLocalizations.of(context)!.authentication,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: AppColors.slate400,
@@ -94,13 +94,13 @@ class _AuthDrawerState extends State<AuthDrawer> {
             if (_localAuthType == AuthType.basic) ...[
               _buildModalTextField(
                 controller: widget.usernameController,
-                labelText: AppStrings.username,
+                labelText: AppLocalizations.of(context)!.username,
                 prefixIcon: Icons.person,
               ),
               const SizedBox(height: 12),
               _buildModalTextField(
                 controller: widget.passwordController,
-                labelText: AppStrings.password,
+                labelText: AppLocalizations.of(context)!.password,
                 prefixIcon: Icons.lock,
                 isPassword: true,
               ),
@@ -119,13 +119,13 @@ class _AuthDrawerState extends State<AuthDrawer> {
                     .map(
                       (type) => RadioListTile<AuthType>(
                         title: Text(
-                          type.displayName,
+                          type.getDisplayName(AppLocalizations.of(context)!),
                           style: AppTextStyles.body.copyWith(
                             color: AppColors.slate400,
                           ),
                         ),
                         subtitle: Text(
-                          type.description,
+                          type.getDescription(AppLocalizations.of(context)!),
                           style: AppTextStyles.caption.copyWith(
                             color: AppColors.slate400,
                           ),

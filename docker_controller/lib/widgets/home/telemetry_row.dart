@@ -1,6 +1,7 @@
+import 'package:docker_controller/models/resource_data_point.dart';
+import 'package:docker_controller/utils/resource_chart_utils.dart';
 import 'package:flutter/material.dart';
-import '../../models/resource_data_point.dart';
-import '../../utils/resource_chart_utils.dart';
+
 import 'home_widgets.dart';
 
 class TelemetryRow extends StatelessWidget {

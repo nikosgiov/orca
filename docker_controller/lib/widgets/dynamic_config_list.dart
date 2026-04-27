@@ -1,6 +1,5 @@
+import 'package:docker_controller/constants/app_colors.dart';
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
-import '../utils/validators.dart';
 
 class DynamicConfigList extends StatelessWidget {
   const DynamicConfigList({
@@ -13,6 +12,8 @@ class DynamicConfigList extends StatelessWidget {
     required this.onAdd,
     required this.onUpdate,
     required this.onRemove,
+    this.validator1,
+    this.validator2,
   });
   final String title;
   final List<Map<String, String>> items;
@@ -22,6 +23,8 @@ class DynamicConfigList extends StatelessWidget {
   final VoidCallback onAdd;
   final void Function(int, String, String) onUpdate;
   final void Function(int) onRemove;
+  final FormFieldValidator<String>? validator1;
+  final FormFieldValidator<String>? validator2;
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +50,6 @@ class DynamicConfigList extends StatelessWidget {
         ...items.asMap().entries.map((entry) {
           final index = entry.key;
           final item = entry.value;
-          final isPortMapping = title == 'Port Mappings';
           return Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Row(
@@ -62,7 +64,7 @@ class DynamicConfigList extends StatelessWidget {
                     ),
                     onChanged: (value) =>
                         onUpdate(index, item.keys.first, value),
-                    validator: isPortMapping ? Validators.validatePort : null,
+                    validator: validator1,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -76,7 +78,7 @@ class DynamicConfigList extends StatelessWidget {
                     ),
                     onChanged: (value) =>
                         onUpdate(index, item.keys.last, value),
-                    validator: isPortMapping ? Validators.validatePort : null,
+                    validator: validator2,
                   ),
                 ),
                 IconButton(

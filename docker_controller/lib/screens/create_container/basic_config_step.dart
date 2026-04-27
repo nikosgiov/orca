@@ -1,6 +1,8 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/providers/create_container_provider.dart';
 import 'package:flutter/material.dart';
-import '../../constants/app_colors.dart';
-import '../../providers/create_container_provider.dart';
+
+import '../../l10n/app_localizations.dart';
 
 class BasicConfigStep extends StatelessWidget {
   const BasicConfigStep({super.key, required this.provider});
@@ -14,11 +16,11 @@ class BasicConfigStep extends StatelessWidget {
           const SizedBox(height: 16),
           TextFormField(
             controller: provider.nameController,
-            decoration: const InputDecoration(
-              labelText: 'Container Name',
-              hintText: 'my-container',
+            decoration: InputDecoration(
+              labelText: AppLocalizations.of(context)!.containerNameLabel,
+              hintText: AppLocalizations.of(context)!.containerNameHint,
               floatingLabelBehavior: FloatingLabelBehavior.always,
-              prefixIcon: Icon(Icons.label),
+              prefixIcon: const Icon(Icons.label),
             ),
             onChanged: provider.setContainerName,
           ),
@@ -27,10 +29,10 @@ class BasicConfigStep extends StatelessWidget {
             children: [
               Expanded(
                 child: CheckboxListTile(
-                  title: const Text('Interactive'),
-                  subtitle: const Text(
-                    'Keep STDIN open',
-                    style: TextStyle(color: AppColors.textMuted),
+                  title: Text(AppLocalizations.of(context)!.interactive),
+                  subtitle: Text(
+                    AppLocalizations.of(context)!.keepStdinOpen,
+                    style: const TextStyle(color: AppColors.textMuted),
                   ),
                   value: provider.interactive,
                   activeColor: AppColors.secondary,
@@ -40,10 +42,10 @@ class BasicConfigStep extends StatelessWidget {
               ),
               Expanded(
                 child: CheckboxListTile(
-                  title: const Text('TTY'),
-                  subtitle: const Text(
-                    'Allocate pseudo-TTY',
-                    style: TextStyle(color: AppColors.textMuted),
+                  title: Text(AppLocalizations.of(context)!.tty),
+                  subtitle: Text(
+                    AppLocalizations.of(context)!.allocatePseudoTty,
+                    style: const TextStyle(color: AppColors.textMuted),
                   ),
                   value: provider.tty,
                   activeColor: AppColors.secondary,
@@ -54,10 +56,10 @@ class BasicConfigStep extends StatelessWidget {
             ],
           ),
           CheckboxListTile(
-            title: const Text('Auto Remove'),
-            subtitle: const Text(
-              'Remove container when it exits',
-              style: TextStyle(color: AppColors.textMuted),
+            title: Text(AppLocalizations.of(context)!.autoRemoveLabel),
+            subtitle: Text(
+              AppLocalizations.of(context)!.removeOnExit,
+              style: const TextStyle(color: AppColors.textMuted),
             ),
             value: provider.autoRemove,
             activeColor: AppColors.secondary,
@@ -65,10 +67,10 @@ class BasicConfigStep extends StatelessWidget {
             controlAffinity: ListTileControlAffinity.leading,
           ),
           CheckboxListTile(
-            title: const Text('Start After Create'),
-            subtitle: const Text(
-              'Automatically start the container after creation',
-              style: TextStyle(color: AppColors.textMuted),
+            title: Text(AppLocalizations.of(context)!.startAfterCreateLabel),
+            subtitle: Text(
+              AppLocalizations.of(context)!.startAfterCreateSubtitle,
+              style: const TextStyle(color: AppColors.textMuted),
             ),
             value: provider.startAfterCreate,
             activeColor: AppColors.secondary,

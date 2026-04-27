@@ -3,7 +3,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import 'constants/app_strings.dart';
 import 'constants/app_themes.dart';
 import 'l10n/app_localizations.dart';
 import 'providers/app_config_provider.dart';
@@ -20,23 +19,15 @@ import 'providers/volumes_networks_provider.dart';
 import 'router/app_router.dart';
 
 /// The root widget of the Docker Controller application.
-class DockerControllerApp extends StatefulWidget {
+class DockerControllerApp extends StatelessWidget {
   const DockerControllerApp({super.key});
-
-  @override
-  State<DockerControllerApp> createState() => _DockerControllerAppState();
-}
-
-class _DockerControllerAppState extends State<DockerControllerApp> {
-  late final GoRouter _router;
-  bool _routerInitialized = false;
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AppConfigProvider()),
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => AuthProvider()..init()),
         ChangeNotifierProxyProvider<AuthProvider, SystemStatsProvider>(
           create: (context) => SystemStatsProvider(Provider.of<AuthProvider>(context, listen: false)),
           update: (_, auth, previous) => previous ?? SystemStatsProvider(auth),
@@ -76,37 +67,50 @@ class _DockerControllerAppState extends State<DockerControllerApp> {
         ),
         ChangeNotifierProvider(create: (_) => SystemInfoProvider()),
       ],
-      child: Builder(
-        builder: (context) {
-          if (!_routerInitialized) {
-            _router = AppRouter.router(
-              context.read<AuthProvider>(),
-              context.read<AppConfigProvider>(),
-            );
-            _routerInitialized = true;
-          }
+      child: const _AppRouterWrapper(),
+    );
+  }
+}
 
-          return Consumer<AppConfigProvider>(
-            builder: (context, config, child) {
-              return MaterialApp.router(
-                title: AppStrings.appName,
-                debugShowCheckedModeBanner: false,
-                theme: AppThemes.darkTheme,
-                darkTheme: AppThemes.darkTheme,
-                themeMode: config.themeMode,
-                routerConfig: _router,
-                localizationsDelegates: const [
-                  AppLocalizations.delegate,
-                  GlobalMaterialLocalizations.delegate,
-                  GlobalWidgetsLocalizations.delegate,
-                  GlobalCupertinoLocalizations.delegate,
-                ],
-                supportedLocales: AppLocalizations.supportedLocales,
-              );
-            },
-          );
-        },
-      ),
+class _AppRouterWrapper extends StatefulWidget {
+  const _AppRouterWrapper();
+
+  @override
+  State<_AppRouterWrapper> createState() => _AppRouterWrapperState();
+}
+
+class _AppRouterWrapperState extends State<_AppRouterWrapper> {
+  late final GoRouter _router;
+
+  @override
+  void initState() {
+    super.initState();
+    _router = AppRouter.router(
+      context.read<AuthProvider>(),
+      context.read<AppConfigProvider>(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AppConfigProvider>(
+      builder: (context, config, child) {
+        return MaterialApp.router(
+          onGenerateTitle: (context) => AppLocalizations.of(context)!.appName,
+          debugShowCheckedModeBanner: false,
+          theme: AppThemes.darkTheme,
+          darkTheme: AppThemes.darkTheme,
+          themeMode: config.themeMode,
+          routerConfig: _router,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+        );
+      },
     );
   }
 }

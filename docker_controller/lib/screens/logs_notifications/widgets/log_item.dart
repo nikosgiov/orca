@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../constants/app_colors.dart';
 import '../../../constants/app_text_styles.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../models/log_entry.dart';
 
 class LogItem extends StatelessWidget {
@@ -29,7 +30,7 @@ class LogItem extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  log.level.label,
+                  log.level.getLabel(AppLocalizations.of(context)!),
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,

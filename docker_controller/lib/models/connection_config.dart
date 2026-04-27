@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import '../l10n/app_localizations.dart';
 
 part 'connection_config.freezed.dart';
 part 'connection_config.g.dart';
@@ -6,15 +7,15 @@ part 'connection_config.g.dart';
 enum AuthType { none, basic }
 
 extension AuthTypeExtension on AuthType {
-  String get displayName => switch (this) {
-    AuthType.none => 'No Authentication',
-    AuthType.basic => 'Basic Authentication',
-  };
+  String getDisplayName(AppLocalizations l10n) => switch (this) {
+        AuthType.none => l10n.authNone,
+        AuthType.basic => l10n.authBasic,
+      };
 
-  String get description => switch (this) {
-    AuthType.none => 'Connect without authentication',
-    AuthType.basic => 'Use username and password',
-  };
+  String getDescription(AppLocalizations l10n) => switch (this) {
+        AuthType.none => l10n.authNoneDesc,
+        AuthType.basic => l10n.authBasicDesc,
+      };
 }
 
 @freezed

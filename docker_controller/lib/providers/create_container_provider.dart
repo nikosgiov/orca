@@ -1,14 +1,16 @@
 import 'dart:convert';
 
+import 'package:docker_controller/core/di/service_locator.dart';
+import 'package:docker_controller/models/app_error.dart';
+import 'package:docker_controller/providers/auth_provider.dart';
+import 'package:docker_controller/services/container_service.dart';
+import 'package:docker_controller/services/image_service.dart';
+import 'package:docker_controller/utils/container_config_builder.dart';
 import 'package:flutter/material.dart';
 
-import '../core/di/service_locator.dart';
-import '../models/app_error.dart';
-import '../providers/auth_provider.dart';
-import '../services/container_service.dart';
-import '../services/image_service.dart';
-import '../utils/container_config_builder.dart';
+import '../l10n/app_localizations.dart';
 
+/// Provider responsible for handling the multi-step form for creating a new container.
 class CreateContainerProvider extends ChangeNotifier {
   CreateContainerProvider(this.authProvider, {String? preSelectedImage}) {
     if (preSelectedImage != null) {
@@ -22,15 +24,31 @@ class CreateContainerProvider extends ChangeNotifier {
     loadImages();
   }
   final AuthProvider authProvider;
+  /// The [GlobalKey] for the creation form.
   final formKey = GlobalKey<FormState>();
+
+  /// Controller for the container name input field.
   final nameController = TextEditingController();
+
+  /// Controller for the image name input field.
   final imageController = TextEditingController();
+
+  /// Controller for the image tag input field.
   final tagController = TextEditingController(text: 'latest');
 
+  /// The currently active step in the creation wizard.
   int currentStep = 0;
+
+  /// Whether the creation process is currently in progress.
   bool isCreating = false;
+
+  /// Whether the list of available images is currently being loaded.
   bool isLoadingImages = false;
+
+  /// A list of available image tags fetched from the Docker daemon.
   List<String> availableImages = [];
+
+  /// The most recent error encountered during image loading or container creation.
   AppError? error;
 
   // Form data
@@ -46,13 +64,8 @@ class CreateContainerProvider extends ChangeNotifier {
   bool isManualEdit = false;
   bool startAfterCreate = true;
 
-  final List<String> stepTitles = [
-    'Select Image',
-    'Basic Config',
-    'Advanced Config',
-    'Review & Create',
-  ];
 
+  /// Disposes of all [TextEditingController]s used by this provider.
   void disposeControllers() {
     nameController.dispose();
     imageController.dispose();
@@ -60,12 +73,20 @@ class CreateContainerProvider extends ChangeNotifier {
   }
 
   Future<void> loadImages() async {
+    if (authProvider.connectionConfig == null) {
+      error = AppError(message: 'Not connected to Docker daemon');
+      notifyListeners();
+      return;
+    }
+
     isLoadingImages = true;
     error = null;
     notifyListeners();
-    try {
-      if (authProvider.connectionConfig != null) {
-        final images = await getIt<ImageService>().getImages();
+
+    final result = await getIt<ImageService>().getImages();
+    
+    result.fold(
+      (images) {
         availableImages = images.map<String>((image) {
           final tags = image.repoTags;
           if (tags.isNotEmpty) {
@@ -77,29 +98,23 @@ class CreateContainerProvider extends ChangeNotifier {
           }
           return image.id.substring(0, 12);
         }).toList();
-      } else {
-        error = AppError(
-          message: 'Not connected to Docker daemon',
-          type: 'Connection',
-        );
-      }
-    } catch (e, st) {
-      error = AppError(
-        message: 'Error loading images: $e',
-        type: 'Exception',
-        stackTrace: st,
-      );
-    } finally {
-      isLoadingImages = false;
-      notifyListeners();
-    }
+      },
+      (failure) {
+        error = failure;
+      },
+    );
+
+    isLoadingImages = false;
+    notifyListeners();
   }
 
+  /// Jumps to a specific step in the wizard.
   void setStep(int step) {
     currentStep = step;
     notifyListeners();
   }
 
+  /// Advances to the next step in the wizard.
   void nextStep() {
     if (currentStep < 3) {
       currentStep++;
@@ -107,6 +122,7 @@ class CreateContainerProvider extends ChangeNotifier {
     }
   }
 
+  /// Returns to the previous step in the wizard.
   void previousStep() {
     if (currentStep > 0) {
       currentStep--;
@@ -217,64 +233,63 @@ class CreateContainerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Orchestrates the container creation process using the current form data.
+  ///
+  /// Returns the ID of the created container on success, or null on failure.
   Future<String?> createContainer(BuildContext context) async {
     if (!formKey.currentState!.validate()) {
       return null;
     }
-    isCreating = true;
-    notifyListeners();
-    try {
-      if (authProvider.connectionConfig == null) {
-        throw Exception('Not connected to Docker daemon');
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Preparing container creation...'),
-          backgroundColor: Color(0xFF2563EB),
-          duration: Duration(seconds: 2),
-        ),
-      );
-      final containerConfig = ContainerConfigBuilder.buildConfig(
-        selectedImage: selectedImage,
-        containerName: containerName,
-        tty: tty,
-        interactive: interactive,
-        networkMode: networkMode,
-        autoRemove: autoRemove,
-        portMappings: portMappings,
-        volumeMappings: volumeMappings,
-        environmentVars: environmentVars,
-      );
-      // Debug: Log the container configuration
-      debugPrint(
-        'Creating container with config: ${json.encode(containerConfig)}',
-      );
-      String? containerId;
-      if (startAfterCreate) {
-        containerId = await getIt<ContainerService>().createAndStartContainer(
-          containerConfig,
-        );
-      } else {
-        containerId = await getIt<ContainerService>().createContainer(
-          containerConfig,
-        );
-      }
-      isCreating = false;
-      notifyListeners();
-      return containerId;
-    } catch (e) {
-      isCreating = false;
-      notifyListeners();
-      if (!context.mounted) {
-        return null;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to create container: $e'),
-          backgroundColor: const Color(0xFFEF4444),
-        ),
-      );
+    if (authProvider.connectionConfig == null) {
       return null;
     }
+
+    isCreating = true;
+    notifyListeners();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppLocalizations.of(context)!.preparingContainerCreation),
+        backgroundColor: const Color(0xFF2563EB),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+
+    final containerConfig = ContainerConfigBuilder.buildConfig(
+      selectedImage: selectedImage,
+      containerName: containerName,
+      tty: tty,
+      interactive: interactive,
+      networkMode: networkMode,
+      autoRemove: autoRemove,
+      portMappings: portMappings,
+      volumeMappings: volumeMappings,
+      environmentVars: environmentVars,
+    );
+
+    debugPrint('Creating container with config: ${json.encode(containerConfig)}');
+
+    final containerService = getIt<ContainerService>();
+    final result = startAfterCreate
+        ? await containerService.createAndStartContainer(containerConfig)
+        : await containerService.createContainer(containerConfig);
+
+    isCreating = false;
+    notifyListeners();
+
+    return result.fold(
+      (containerId) => containerId,
+      (failure) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.failedToCreateContainer(failure.message)),
+              backgroundColor: const Color(0xFFEF4444),
+            ),
+          );
+        }
+        return null;
+      },
+    );
   }
 }

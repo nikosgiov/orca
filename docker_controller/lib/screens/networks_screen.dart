@@ -1,18 +1,21 @@
 import 'dart:async';
+
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_gradients.dart';
+import 'package:docker_controller/constants/app_paddings.dart';
+import 'package:docker_controller/constants/app_text_styles.dart';
+import 'package:docker_controller/models/app_state.dart';
+import 'package:docker_controller/models/docker_network.dart';
+import 'package:docker_controller/providers/auth_provider.dart';
+import 'package:docker_controller/providers/volumes_networks_provider.dart';
+import 'package:docker_controller/widgets/app_gradient_top_bar.dart';
+import 'package:docker_controller/widgets/info_row.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../constants/app_colors.dart';
-import '../constants/app_gradients.dart';
-import '../constants/app_paddings.dart';
-import '../constants/app_strings.dart';
-import '../constants/app_text_styles.dart';
-import '../models/docker_network.dart';
-import '../providers/auth_provider.dart';
-import '../providers/volumes_networks_provider.dart';
-import '../widgets/app_gradient_top_bar.dart';
-import '../widgets/info_row.dart';
+import '../core/extensions/context_extensions.dart';
+import '../l10n/app_localizations.dart';
 
 /// ─── Networks Screen ─────────────────────────────────────────────────────────
 /// Dedicated screen for Docker networks (split from volumes_networks_screen).
@@ -21,10 +24,7 @@ class NetworksScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => VolumesNetworksProvider(),
-      child: const _NetworksScreenBody(),
-    );
+    return const _NetworksScreenBody();
   }
 }
 
@@ -58,7 +58,7 @@ class _NetworksScreenBodyState extends State<_NetworksScreenBody> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppGradientTopBar(
-          title: 'Networks',
+          title: context.l10n.networksTitle,
           leftWidget: IconButton(
             onPressed: () => context.pop(),
             icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
@@ -73,25 +73,52 @@ class _NetworksScreenBodyState extends State<_NetworksScreenBody> {
           onRefresh: () async => provider.refreshData(),
           color: AppColors.primary,
           backgroundColor: const Color(0xFF1A0B3B),
-          child: provider.isLoadingNetworks
-              ? const Center(
-                  child: CircularProgressIndicator(color: AppColors.primary),
-                )
-              : provider.networks.isEmpty
-              ? const Center(
-                  child: Text(
-                    'No networks found',
-                    style: AppTextStyles.caption,
+          child: switch (provider.networksState) {
+            AppInitial() || AppLoading() => const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              ),
+            AppStateError(:final failure) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, color: AppColors.error, size: 48),
+                      const SizedBox(height: 16),
+                      Text(failure.localizedMessage(context.l10n), style: AppTextStyles.body, textAlign: TextAlign.center),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => provider.refreshData(),
+                        child: Text(context.l10n.retry),
+                      ),
+                    ],
                   ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
-                  itemCount: provider.networks.length,
-                  itemBuilder: (context, index) {
-                    final network = provider.networks[index];
-                    return _NetworkCard(network: network, provider: provider);
-                  },
                 ),
+              ),
+            AppSuccess(data: final networks) => networks.isEmpty
+                ? CustomScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    slivers: [
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: Center(
+                          child: Text(
+                            context.l10n.noNetworksFound,
+                            style: AppTextStyles.caption,
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+                    itemCount: networks.length,
+                    itemBuilder: (context, index) {
+                      final network = networks[index];
+                      return _NetworkCard(network: network, provider: provider);
+                    },
+                  ),
+          },
         ),
       ),
     );
@@ -108,8 +135,8 @@ class _NetworkCard extends StatelessWidget {
     final name = network.name;
     final driver = network.driver;
     final scope = network.scope;
-    final subnet = _extractSubnet(network);
-    final containers = _extractContainers(network);
+    final subnet = _extractSubnet(network, ctx.l10n);
+    final containers = _extractContainers(network, ctx.l10n);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -147,7 +174,7 @@ class _NetworkCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      '$driver · ${AppStrings.labelScope}: $scope',
+                      '$driver · ${ctx.l10n.labelScope}: $scope',
                       style: AppTextStyles.caption,
                     ),
                   ],
@@ -157,12 +184,12 @@ class _NetworkCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           InfoRow(
-            label: AppStrings.labelSubnet,
+            label: ctx.l10n.labelSubnet,
             value: subnet,
             icon: Icons.network_check_outlined,
           ),
           InfoRow(
-            label: AppStrings.labelContainers,
+            label: ctx.l10n.labelContainers,
             value: containers,
             icon: Icons.dns_outlined,
           ),
@@ -171,7 +198,7 @@ class _NetworkCard extends StatelessWidget {
             children: [
               Expanded(
                 child: _PillBtn(
-                  label: 'INSPECT',
+                  label: ctx.l10n.actionInspect.toUpperCase(),
                   color: AppColors.primary,
                   onPressed: () => _inspect(ctx, network, provider),
                 ),
@@ -179,7 +206,7 @@ class _NetworkCard extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: _PillBtn(
-                  label: 'REMOVE',
+                  label: ctx.l10n.actionRemove.toUpperCase(),
                   color: AppColors.error,
                   onPressed: () => _remove(ctx, name, provider),
                 ),
@@ -200,12 +227,12 @@ class _NetworkCard extends StatelessWidget {
     unawaited(showDialog(
       context: ctx,
       barrierDismissible: false,
-      builder: (_) => const AlertDialog(
+      builder: (_) => AlertDialog(
         content: Row(
           children: [
-            CircularProgressIndicator(),
-            SizedBox(width: 16),
-            Text('Loading...'),
+            const CircularProgressIndicator(),
+            const SizedBox(width: 16),
+            Text(ctx.l10n.loading),
           ],
         ),
       ),
@@ -217,8 +244,8 @@ class _NetworkCard extends StatelessWidget {
     Navigator.pop(ctx);
     if (details == null) {
       ScaffoldMessenger.of(ctx).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to fetch network details'),
+        SnackBar(
+          content: Text(ctx.l10n.failedToFetchNetworkDetails),
           backgroundColor: AppColors.error,
         ),
       );
@@ -228,7 +255,7 @@ class _NetworkCard extends StatelessWidget {
     await showDialog(
       context: ctx,
       builder: (_) => AlertDialog(
-        title: Text('Network: $name'),
+        title: Text('${ctx.l10n.network}: $name'),
         content: SizedBox(
           width: double.maxFinite,
           child: SingleChildScrollView(
@@ -236,14 +263,14 @@ class _NetworkCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _InspectRow(label: 'Name', value: details.name),
-                _InspectRow(label: 'Driver', value: details.driver),
-                _InspectRow(label: 'Scope', value: details.scope),
-                _InspectRow(label: 'Created', value: details.created ?? ''),
-                _InspectRow(label: 'Subnet', value: _extractSubnet(details)),
+                _InspectRow(label: ctx.l10n.name, value: details.name),
+                _InspectRow(label: ctx.l10n.labelDriver, value: details.driver),
+                _InspectRow(label: ctx.l10n.labelScope, value: details.scope),
+                _InspectRow(label: ctx.l10n.labelCreated, value: details.created ?? ''),
+                _InspectRow(label: ctx.l10n.labelSubnet, value: _extractSubnet(details, ctx.l10n)),
                 _InspectRow(
-                  label: 'Containers',
-                  value: _extractContainers(details),
+                  label: ctx.l10n.labelContainers,
+                  value: _extractContainers(details, ctx.l10n),
                 ),
               ],
             ),
@@ -252,7 +279,7 @@ class _NetworkCard extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Close'),
+            child: Text(ctx.l10n.close),
           ),
         ],
       ),
@@ -264,15 +291,16 @@ class _NetworkCard extends StatelessWidget {
     String name,
     VolumesNetworksProvider provider,
   ) {
+    final l10n = ctx.l10n;
     showDialog(
       context: ctx,
       builder: (dCtx) => AlertDialog(
-        title: const Text('Remove Network'),
-        content: Text('Remove network "$name"?'),
+        title: Text(l10n.actionRemove),
+        content: Text(l10n.removeNetworkConfirm(name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dCtx),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () async {
@@ -284,7 +312,7 @@ class _NetworkCard extends StatelessWidget {
               ScaffoldMessenger.of(ctx).showSnackBar(
                 SnackBar(
                   content: Text(
-                    ok ? 'Removed $name' : 'Failed to remove $name',
+                    ok ? l10n.removedNetwork(name) : l10n.failedToRemoveNetwork(name),
                   ),
                   backgroundColor: ok
                       ? AppColors.success
@@ -293,14 +321,14 @@ class _NetworkCard extends StatelessWidget {
               );
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Remove'),
+            child: Text(l10n.actionRemove),
           ),
         ],
       ),
     );
   }
 
-  static String _extractSubnet(DockerNetwork network) {
+  String _extractSubnet(DockerNetwork network, AppLocalizations l10n) {
     final ipam = network.ipam;
     if (ipam != null &&
         ipam['Config'] is List &&
@@ -310,10 +338,10 @@ class _NetworkCard extends StatelessWidget {
         return config['Subnet'].toString();
       }
     }
-    return 'N/A';
+    return l10n.notAvailable;
   }
 
-  static String _extractContainers(DockerNetwork network) {
+  String _extractContainers(DockerNetwork network, AppLocalizations l10n) {
     final containersMap = network.containers;
     if (containersMap != null && containersMap.isNotEmpty) {
       final names = containersMap.values
@@ -324,7 +352,7 @@ class _NetworkCard extends StatelessWidget {
         return names;
       }
     }
-    return 'No containers attached';
+    return l10n.none;
   }
 }
 

@@ -1,9 +1,9 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_paddings.dart';
+import 'package:docker_controller/constants/app_text_styles.dart';
 import 'package:flutter/material.dart';
 
-import '../../constants/app_colors.dart';
-import '../../constants/app_paddings.dart';
-import '../../constants/app_strings.dart';
-import '../../constants/app_text_styles.dart';
+import '../../l10n/app_localizations.dart';
 
 class AdvancedDrawer extends StatefulWidget {
   const AdvancedDrawer({
@@ -59,7 +59,7 @@ class _AdvancedDrawerState extends State<AdvancedDrawer> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              AppStrings.advancedOptions,
+              AppLocalizations.of(context)!.advancedOptions,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: AppColors.slate400,
@@ -72,13 +72,13 @@ class _AdvancedDrawerState extends State<AdvancedDrawer> {
               ).copyWith(switchTheme: _buildSwitchTheme()),
               child: SwitchListTile(
                 title: Text(
-                  AppStrings.rememberThisConnection,
+                  AppLocalizations.of(context)!.rememberThisConnection,
                   style: AppTextStyles.body.copyWith(
                     color: AppColors.slate400,
                   ),
                 ),
                 subtitle: Text(
-                  AppStrings.saveHostCredentials,
+                  AppLocalizations.of(context)!.saveHostCredentials,
                   style: AppTextStyles.caption.copyWith(
                     color: AppColors.slate400,
                   ),
@@ -100,13 +100,13 @@ class _AdvancedDrawerState extends State<AdvancedDrawer> {
               ).copyWith(switchTheme: _buildSwitchTheme()),
               child: SwitchListTile(
                 title: Text(
-                  AppStrings.useTls,
+                  AppLocalizations.of(context)!.useTls,
                   style: AppTextStyles.body.copyWith(
                     color: AppColors.slate400,
                   ),
                 ),
                 subtitle: Text(
-                  AppStrings.enableSecureConnection,
+                  AppLocalizations.of(context)!.enableSecureConnection,
                   style: AppTextStyles.caption.copyWith(
                     color: AppColors.slate400,
                   ),

@@ -1,22 +1,22 @@
 import 'dart:async' as dart_async;
 
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_text_styles.dart';
+import 'package:docker_controller/models/app_state.dart';
+import 'package:docker_controller/models/resource_data_point.dart';
+import 'package:docker_controller/providers/auth_provider.dart';
+import 'package:docker_controller/providers/resource_monitoring_provider.dart';
+import 'package:docker_controller/providers/settings_provider.dart';
+import 'package:docker_controller/utils/data_formatting_utils.dart';
+import 'package:docker_controller/utils/resource_chart_utils.dart';
+import 'package:docker_controller/widgets/app_background.dart';
+import 'package:docker_controller/widgets/app_gradient_top_bar.dart';
+import 'package:docker_controller/widgets/app_loading_indicator.dart';
+import 'package:docker_controller/widgets/resource_chart_card.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../constants/app_colors.dart';
-import '../constants/app_strings.dart';
-import '../constants/app_text_styles.dart';
-import '../models/app_state.dart';
-import '../models/resource_data_point.dart';
-import '../providers/auth_provider.dart';
-import '../providers/resource_monitoring_provider.dart';
-import '../providers/settings_provider.dart';
-import '../utils/data_formatting_utils.dart';
-import '../utils/resource_chart_utils.dart';
-import '../widgets/app_background.dart';
-import '../widgets/app_gradient_top_bar.dart';
-import '../widgets/app_loading_indicator.dart';
-import '../widgets/resource_chart_card.dart';
+import '../l10n/app_localizations.dart';
 
 class ResourceMonitoringScreen extends StatelessWidget {
   const ResourceMonitoringScreen({super.key});
@@ -41,11 +41,11 @@ class _NotConnectedView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppGradientTopBar(title: AppStrings.resourceMonitoringTitle),
+      appBar: AppGradientTopBar(title: AppLocalizations.of(context)!.resourceMonitoringTitle),
       body: Center(
-        child: Text('Not connected to Docker. Please connect first.'),
+        child: Text(AppLocalizations.of(context)!.notConnectedToDocker),
       ),
     );
   }
@@ -134,7 +134,7 @@ class _ResourceMonitoringScreenBodyState
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: const AppGradientTopBar(title: AppStrings.resourceMonitoringTitle),
+      appBar: AppGradientTopBar(title: AppLocalizations.of(context)!.resourceMonitoringTitle),
       body: Stack(
         children: [
           const _AmbientGlowOrbs(),
@@ -158,8 +158,25 @@ class _ResourceMonitoringScreenBodyState
   ) {
     return switch (state) {
       AppInitial() || AppLoading() when !provider.isRefreshing => 
-        const AppLoadingIndicator(message: 'Loading resource data...'),
-      AppError(message: final msg) => Center(child: Text(msg)),
+        AppLoadingIndicator(message: AppLocalizations.of(context)!.loadingResourceData),
+      AppStateError(:final failure) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, color: AppColors.error, size: 48),
+                const SizedBox(height: 16),
+                Text(failure.localizedMessage(AppLocalizations.of(context)!), style: AppTextStyles.body, textAlign: TextAlign.center),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => provider.refreshData(),
+                  child: Text(AppLocalizations.of(context)!.retry),
+                ),
+              ],
+            ),
+          ),
+        ),
       _ => _MetricsList(provider: provider),
     };
   }
@@ -187,20 +204,20 @@ class _MetricsList extends StatelessWidget {
         child: Column(
           children: [
             _buildChart(
-              AppStrings.cpuUsage,
+              AppLocalizations.of(context)!.cpuUsage,
               Icons.memory,
               AppColors.primary,
-              'cpu',
+              ResourceMetricType.cpu,
               dataPoints,
               provider.selectedTimeRange,
               (val) => '${val.toStringAsFixed(1)}%',
             ),
             const SizedBox(height: 16),
             _buildChart(
-              AppStrings.memoryUsage,
+              AppLocalizations.of(context)!.memoryUsage,
               Icons.storage,
               const Color(0xFFC084FC),
-              'memory',
+              ResourceMetricType.memory,
               dataPoints,
               provider.selectedTimeRange,
               (val) => '${val.toStringAsFixed(1)} GB',
@@ -208,10 +225,10 @@ class _MetricsList extends StatelessWidget {
             if (dataPoints.isNotEmpty && dataPoints.any((p) => p.gpuUsage != null)) ...[
               const SizedBox(height: 16),
               _buildChart(
-                'GPU Usage',
+                AppLocalizations.of(context)!.gpuUsage,
                 Icons.bolt,
                 const Color(0xFF10B981),
-                'gpu',
+                ResourceMetricType.gpu,
                 dataPoints,
                 provider.selectedTimeRange,
                 (val) => '${val.toStringAsFixed(1)}%',
@@ -219,20 +236,20 @@ class _MetricsList extends StatelessWidget {
             ],
             const SizedBox(height: 16),
             _buildChart(
-              AppStrings.networkIO,
+              AppLocalizations.of(context)!.networkIO,
               Icons.wifi,
               AppColors.success,
-              'network',
+              ResourceMetricType.network,
               dataPoints,
               provider.selectedTimeRange,
               DataFormattingUtils.formatNetworkSpeed,
             ),
             const SizedBox(height: 16),
             _buildChart(
-              AppStrings.diskIO,
+              AppLocalizations.of(context)!.diskIO,
               Icons.storage_outlined,
               const Color(0xFFFBBF24),
-              'disk',
+              ResourceMetricType.disk,
               dataPoints,
               provider.selectedTimeRange,
               DataFormattingUtils.formatNetworkSpeed,
@@ -247,12 +264,12 @@ class _MetricsList extends StatelessWidget {
     String title,
     IconData icon,
     Color color,
-    String metricType,
+    ResourceMetricType metricType,
     List<ResourceDataPoint> dataPoints,
     String timeRange,
     String Function(double) formatter,
   ) {
-    final spots = ResourceChartUtils.getChartData(dataPoints, metricType, timeRange);
+    final spots = ResourceChartUtils.getChartData(dataPoints, metricType.name, timeRange);
     final value = spots.isNotEmpty ? formatter(spots.last.y) : 'N/A';
 
     return ResourceChartCard(
@@ -260,6 +277,7 @@ class _MetricsList extends StatelessWidget {
       currentValue: value,
       icon: icon,
       color: color,
+      metricType: metricType,
       data: spots,
       dataPoints: dataPoints,
     );
@@ -278,7 +296,7 @@ class _TimeframeHeader extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'Timeframe',
+            AppLocalizations.of(context)!.timeframe,
             style: AppTextStyles.body.copyWith(fontWeight: FontWeight.bold),
           ),
           _TimeframeDropdown(provider: provider),
@@ -294,12 +312,13 @@ class _TimeframeDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final settings = context.read<SettingsProvider>();
     final options = {
-      '30m': '30 Minutes',
-      '1h': '1 Hour',
-      '6h': '6 Hours',
-      '24h': '24 Hours',
+      '30m': l10n.minutesCount(30),
+      '1h': l10n.hoursCount(1),
+      '6h': l10n.hoursCount(6),
+      '24h': l10n.hoursCount(24),
     };
 
     return Container(

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+
 import '../../../constants/app_colors.dart';
 import '../../../constants/app_text_styles.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../models/app_notification.dart';
 import '../../../models/notification_type.dart';
 import '../../../providers/logs_notifications_provider.dart';
@@ -116,21 +118,23 @@ class NotificationItem extends StatelessWidget {
                       const Icon(Icons.done, color: AppColors.success),
                       const SizedBox(width: 8),
                       Text(
-                        notification.read ? 'Mark Unread' : 'Mark Read',
+                        notification.read
+                            ? AppLocalizations.of(context)!.markUnread
+                            : AppLocalizations.of(context)!.markRead,
                         style: const TextStyle(color: AppColors.textPrimary),
                       ),
                     ],
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'delete',
                   child: Row(
                     children: [
-                      Icon(Icons.delete, color: AppColors.error),
-                      SizedBox(width: 8),
+                      const Icon(Icons.delete, color: AppColors.error),
+                      const SizedBox(width: 8),
                       Text(
-                        'Delete',
-                        style: TextStyle(color: AppColors.textPrimary),
+                        AppLocalizations.of(context)!.delete,
+                        style: const TextStyle(color: AppColors.textPrimary),
                       ),
                     ],
                   ),
@@ -151,8 +155,8 @@ class NotificationItem extends StatelessWidget {
   ) {
     provider.deleteNotification(notification);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Notification deleted'),
+      SnackBar(
+        content: Text(AppLocalizations.of(context)!.notificationDeleted),
         backgroundColor: AppColors.success,
       ),
     );

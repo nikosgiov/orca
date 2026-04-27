@@ -1,4 +1,4 @@
-import '../models/docker_container.dart';
+import 'package:docker_controller/models/docker_container.dart';
 
 class ContainerFilterUtils {
   /// Filters a list of [DockerContainer] based on a search query and a selected status filter.

@@ -1,16 +1,17 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_paddings.dart';
+import 'package:docker_controller/constants/app_text_styles.dart';
+import 'package:docker_controller/providers/auth_provider.dart';
+import 'package:docker_controller/providers/create_network_provider.dart';
+import 'package:docker_controller/widgets/app_background.dart';
+import 'package:docker_controller/widgets/app_gradient_top_bar.dart';
+import 'package:docker_controller/widgets/step_navigation_buttons.dart';
+import 'package:docker_controller/widgets/step_progress_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../constants/app_colors.dart';
-import '../constants/app_paddings.dart';
-import '../constants/app_text_styles.dart';
-import '../providers/auth_provider.dart';
-import '../providers/create_network_provider.dart';
-import '../widgets/app_background.dart';
-import '../widgets/app_gradient_top_bar.dart';
-import '../widgets/step_navigation_buttons.dart';
-import '../widgets/step_progress_bar.dart';
+import '../l10n/app_localizations.dart';
 import 'create_network/advanced_options_step.dart';
 import 'create_network/basic_info_step.dart';
 import 'create_network/ipam_config_step.dart';
@@ -44,7 +45,7 @@ class _CreateNetworkScreenBody extends StatelessWidget {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppGradientTopBar(
-          title: 'Create Network',
+          title: AppLocalizations.of(context)!.createNetworkTitle,
           leftWidget: IconButton(
             onPressed: () => context.pop(),
             icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
@@ -56,7 +57,12 @@ class _CreateNetworkScreenBody extends StatelessWidget {
             Padding(
               padding: AppPaddings.card,
               child: StepProgressBar(
-                stepTitles: provider.stepTitles,
+                stepTitles: [
+                  AppLocalizations.of(context)!.basicInfo,
+                  AppLocalizations.of(context)!.ipamConfig,
+                  AppLocalizations.of(context)!.advancedOptions,
+                  AppLocalizations.of(context)!.review,
+                ],
                 currentStep: provider.currentStep,
                 width: 320,
                 backgroundColor: AppColors.slate400,
@@ -78,11 +84,10 @@ class _CreateNetworkScreenBody extends StatelessWidget {
                         bottom: true,
                         child: StepNavigationButtons(
                           currentStep: provider.currentStep,
-                          totalSteps: provider.stepTitles.length,
+                          totalSteps: 4,
                           onPrevious: provider.previousStep,
                           onNextOrCreate:
-                              provider.currentStep ==
-                                  provider.stepTitles.length - 1
+                              provider.currentStep == 3
                               ? () async {
                                   final (success, result) = await provider
                                       .createNetwork();
@@ -92,9 +97,9 @@ class _CreateNetworkScreenBody extends StatelessWidget {
                                     }
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: Text(
-                                          'Network $result created successfully!',
-                                        ),
+                                            content: Text(
+                                              AppLocalizations.of(context)!.networkCreatedSuccessfully(result ?? ''),
+                                            ),
                                         backgroundColor: const Color(
                                           0xFF10B981,
                                         ),

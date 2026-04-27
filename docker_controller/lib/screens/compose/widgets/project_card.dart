@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../../constants/app_colors.dart';
 import '../../../constants/app_text_styles.dart';
 import '../../../core/di/service_locator.dart';
+import '../../../core/utils/result.dart';
+import '../../../models/app_error.dart';
 import '../../../models/compose_project.dart';
 import '../../../providers/compose_provider.dart';
 import '../../../services/compose_service.dart';
@@ -258,28 +260,32 @@ class ProjectCard extends StatelessWidget {
                         color: Colors.black,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: FutureBuilder<Stream<List<int>>>(
+                      child: FutureBuilder<Result<Stream<List<int>>, AppError>>(
                         future: getIt<ComposeService>().runCommandStream(
                           projectName,
                           project.workingDir,
                           'logs --tail=200 -f',
                         ),
                         builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const Center(
-                              child: CircularProgressIndicator(),
-                            );
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Center(child: CircularProgressIndicator());
                           }
+                          
                           if (snapshot.hasError || !snapshot.hasData) {
                             return const Center(
-                              child: Text(
-                                'Error fetching logs',
-                                style: AppTextStyles.caption,
-                              ),
+                              child: Text('Error fetching logs', style: AppTextStyles.caption),
                             );
                           }
-                          return _LogStreamViewer(logStream: snapshot.data!);
+
+                          return snapshot.data!.fold(
+                            (stream) => _LogStreamViewer(logStream: stream),
+                            (failure) => Center(
+                              child: Text(
+                                'Error: ${failure.message}',
+                                style: AppTextStyles.caption.copyWith(color: AppColors.error),
+                              ),
+                            ),
+                          );
                         },
                       ),
                     ),

@@ -1,23 +1,24 @@
 import 'dart:async' as dart_async;
 
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_text_styles.dart';
+import 'package:docker_controller/models/app_state.dart';
+import 'package:docker_controller/providers/auth_provider.dart';
+import 'package:docker_controller/providers/settings_provider.dart';
+import 'package:docker_controller/providers/system_stats_provider.dart';
+import 'package:docker_controller/widgets/app_background.dart';
+import 'package:docker_controller/widgets/app_button.dart';
+import 'package:docker_controller/widgets/app_gradient_top_bar.dart';
+import 'package:docker_controller/widgets/home/container_status_card.dart';
+import 'package:docker_controller/widgets/home/home_widgets.dart';
+import 'package:docker_controller/widgets/home/infrastructure_card.dart';
+import 'package:docker_controller/widgets/home/system_node_card.dart';
+import 'package:docker_controller/widgets/home/telemetry_row.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../constants/app_colors.dart';
-import '../constants/app_strings.dart';
-import '../constants/app_text_styles.dart';
-import '../providers/auth_provider.dart';
-import '../providers/settings_provider.dart';
-import '../providers/system_stats_provider.dart';
-import '../widgets/app_background.dart';
-import '../widgets/app_button.dart';
-import '../widgets/app_gradient_top_bar.dart';
-import '../widgets/home/container_status_card.dart';
-import '../widgets/home/home_widgets.dart';
-import '../widgets/home/infrastructure_card.dart';
-import '../widgets/home/system_node_card.dart';
-import '../widgets/home/telemetry_row.dart';
+import '../l10n/app_localizations.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -101,7 +102,7 @@ class _HomeScreenState extends State<HomeScreen>
       scale: 1.5,
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: const AppGradientTopBar(title: AppStrings.dashboardTitle),
+        appBar: AppGradientTopBar(title: AppLocalizations.of(context)!.dashboardTitle),
         body: Consumer2<AuthProvider, SystemStatsProvider>(
           builder: (context, auth, stats, child) {
             if (!auth.isConnected) {
@@ -111,52 +112,84 @@ class _HomeScreenState extends State<HomeScreen>
               onRefresh: stats.refreshAll,
               color: AppColors.primary,
               backgroundColor: const Color(0xFF1A0B3B),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SectionLabel(label: 'System Node'),
-                    const SizedBox(height: 12),
-                    SystemNodeCard(
-                      systemInfo: stats.systemInfo,
-                      connectionUri: auth.connectionConfig?.uri,
+              child: switch (stats.state) {
+                AppInitial() || AppLoading() when stats.systemInfo == null => const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(120),
+                      child: CircularProgressIndicator(color: AppColors.primary),
                     ),
-                    const SizedBox(height: 24),
-                    const Row(
-                      children: [
-                        SectionLabel(label: 'Live Telemetry'),
-                        Spacer(),
-                        Text(
-                          'UPDATED: JUST NOW',
-                          style: TextStyle(
-                            fontSize: 9,
-                            color: AppColors.textMuted,
-                            fontWeight: FontWeight.w500,
-                            letterSpacing: 0.5,
+                  ),
+                AppStateError(:final failure) => SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.7,
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.error_outline, color: AppColors.error, size: 48),
+                              const SizedBox(height: 16),
+                              Text(failure.message, style: AppTextStyles.body, textAlign: TextAlign.center),
+                              const SizedBox(height: 16),
+                              ElevatedButton(
+                                onPressed: stats.refreshAll,
+                                child: Text(AppLocalizations.of(context)!.retry),
+                              ),
+                            ],
                           ),
+                        ),
+                      ),
+                    ),
+                  ),
+                _ => SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SectionLabel(label: AppLocalizations.of(context)!.systemNode),
+                        const SizedBox(height: 12),
+                        SystemNodeCard(
+                          systemInfo: stats.systemInfo,
+                          connectionUri: auth.connectionConfig?.uri,
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          children: [
+                            SectionLabel(label: AppLocalizations.of(context)!.liveTelemetry),
+                            const Spacer(),
+                            Text(
+                              AppLocalizations.of(context)!.updatedJustNow,
+                              style: const TextStyle(
+                                fontSize: 9,
+                                color: AppColors.textMuted,
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        TelemetryRow(
+                          systemMetrics: stats.systemMetrics,
+                          systemInfo: stats.systemInfo,
+                        ),
+                        const SizedBox(height: 24),
+                        ContainerStatusCard(
+                          running: stats.resourceStats?['running'] ?? 0,
+                          stopped: stats.resourceStats?['stopped'] ?? 0,
+                          exited: stats.resourceStats?['exited'] ?? 0,
+                        ),
+                        const SizedBox(height: 16),
+                        InfrastructureCard(
+                          volCount: stats.volumeCount,
+                          netCount: stats.networkCount,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    TelemetryRow(
-                      systemMetrics: stats.systemMetrics,
-                      systemInfo: stats.systemInfo,
-                    ),
-                    const SizedBox(height: 24),
-                    ContainerStatusCard(
-                      running: stats.resourceStats?['running'] ?? 0,
-                      stopped: stats.resourceStats?['stopped'] ?? 0,
-                      exited: stats.resourceStats?['exited'] ?? 0,
-                    ),
-                    const SizedBox(height: 16),
-                    InfrastructureCard(
-                      volCount: stats.volumeCount,
-                      netCount: stats.networkCount,
-                    ),
-                  ],
-                ),
-              ),
+                  ),
+              },
             );
           },
         ),
@@ -188,12 +221,12 @@ class _HomeScreenState extends State<HomeScreen>
             ),
             const SizedBox(height: 24),
             Text(
-              AppStrings.connectionLost,
+              AppLocalizations.of(context)!.connectionLost,
               style: AppTextStyles.heading1.copyWith(fontSize: 18),
             ),
             const SizedBox(height: 12),
-            const Text(
-              AppStrings.connectionLostDesc,
+            Text(
+              AppLocalizations.of(context)!.connectionLostDesc,
               style: AppTextStyles.caption,
               textAlign: TextAlign.center,
             ),
@@ -233,7 +266,7 @@ class _HomeScreenState extends State<HomeScreen>
               children: [
                 Expanded(
                   child: AppButton(
-                    label: AppStrings.reconnect,
+                    label: AppLocalizations.of(context)!.reconnect,
                     onPressed: () {
                       final config = auth.connectionConfig;
                       if (config != null) {
@@ -246,7 +279,7 @@ class _HomeScreenState extends State<HomeScreen>
                 const SizedBox(width: 12),
                 Expanded(
                   child: AppButton(
-                    label: AppStrings.settingsTitle,
+                    label: AppLocalizations.of(context)!.settingsTitle,
                     onPressed: () => context.goNamed('connection'),
                     color: AppColors.primary,
                   ),

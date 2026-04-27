@@ -1,14 +1,15 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_paddings.dart';
+import 'package:docker_controller/core/di/service_locator.dart';
+import 'package:docker_controller/providers/auth_provider.dart';
+import 'package:docker_controller/services/notification_service.dart';
+import 'package:docker_controller/widgets/app_background.dart';
+import 'package:docker_controller/widgets/app_gradient_top_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../constants/app_colors.dart';
-import '../../constants/app_paddings.dart';
-import '../../core/di/service_locator.dart';
-import '../../providers/auth_provider.dart';
-import '../../services/notification_service.dart';
-import '../../widgets/app_background.dart';
-import '../../widgets/app_gradient_top_bar.dart';
+import '../../l10n/app_localizations.dart';
 import 'widgets/monitoring_settings_card.dart';
 import 'widgets/status_card.dart';
 import 'widgets/threshold_settings_card.dart';
@@ -86,9 +87,13 @@ class _NotificationSettingsScreenState
             thresholds['gpu_memory']?.toString() ?? '85.0';
       });
     } catch (e) {
-      _showErrorSnackBar('Failed to load notification settings: $e');
+      if (mounted) {
+        _showErrorSnackBar(AppLocalizations.of(context)!.failedToLoadSettings(e.toString()));
+      }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -97,7 +102,7 @@ class _NotificationSettingsScreenState
     final connection = authProvider.connectionConfig;
 
     if (connection == null) {
-      _showErrorSnackBar('No active connection');
+      _showErrorSnackBar(AppLocalizations.of(context)!.noActiveConnection);
       return;
     }
 
@@ -105,11 +110,17 @@ class _NotificationSettingsScreenState
 
     try {
       await _notificationService.registerForNotifications();
-      _showSuccessSnackBar('Successfully registered for notifications');
+      if (mounted) {
+        _showSuccessSnackBar(AppLocalizations.of(context)!.registerSuccess);
+      }
     } catch (e) {
-      _showErrorSnackBar('Failed to register for notifications: $e');
+      if (mounted) {
+        _showErrorSnackBar(AppLocalizations.of(context)!.registerFailed(e.toString()));
+      }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -124,7 +135,9 @@ class _NotificationSettingsScreenState
     try {
       await _notificationService.registerForNotifications();
     } catch (e) {
-      _showErrorSnackBar('Failed to update server: $e');
+      if (mounted) {
+        _showErrorSnackBar(AppLocalizations.of(context)!.failedToUpdateServer(e.toString()));
+      }
     }
   }
 
@@ -133,7 +146,7 @@ class _NotificationSettingsScreenState
     final connection = authProvider.connectionConfig;
 
     if (connection == null) {
-      _showErrorSnackBar('No active connection');
+      _showErrorSnackBar(AppLocalizations.of(context)!.noActiveConnection);
       return;
     }
 
@@ -141,11 +154,17 @@ class _NotificationSettingsScreenState
 
     try {
       await _notificationService.unregisterFromNotifications();
-      _showSuccessSnackBar('Successfully unregistered from notifications');
+      if (mounted) {
+        _showSuccessSnackBar(AppLocalizations.of(context)!.unregisterSuccess);
+      }
     } catch (e) {
-      _showErrorSnackBar('Failed to unregister from notifications: $e');
+      if (mounted) {
+        _showErrorSnackBar(AppLocalizations.of(context)!.unregisterFailed(e.toString()));
+      }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -158,7 +177,7 @@ class _NotificationSettingsScreenState
     final connection = authProvider.connectionConfig;
 
     if (connection == null) {
-      _showErrorSnackBar('No active connection');
+      _showErrorSnackBar(AppLocalizations.of(context)!.noActiveConnection);
       return;
     }
 
@@ -172,11 +191,17 @@ class _NotificationSettingsScreenState
         gpuMemoryThreshold: double.tryParse(_gpuMemoryThresholdController.text),
       );
 
-      _showSuccessSnackBar('Thresholds updated successfully');
+      if (mounted) {
+        _showSuccessSnackBar(AppLocalizations.of(context)!.thresholdsUpdated);
+      }
     } catch (e) {
-      _showErrorSnackBar('Failed to update thresholds: $e');
+      if (mounted) {
+        _showErrorSnackBar('${AppLocalizations.of(context)!.failed}: $e');
+      }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -200,7 +225,7 @@ class _NotificationSettingsScreenState
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppGradientTopBar(
-          title: 'Notification Settings',
+          title: AppLocalizations.of(context)!.notificationSettingsTitle,
           leftWidget: IconButton(
             onPressed: () => context.pop(),
             icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
@@ -259,11 +284,11 @@ class _NotificationSettingsScreenState
 
   String? _percentValidator(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Required';
+      return AppLocalizations.of(context)!.required;
     }
     final n = double.tryParse(value);
     if (n == null || n < 0 || n > 100) {
-      return 'Enter 0–100';
+      return AppLocalizations.of(context)!.enterPercent;
     }
     return null;
   }

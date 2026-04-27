@@ -1,23 +1,29 @@
-import 'package:dio/dio.dart';
-
+import 'package:docker_controller/core/utils/result.dart';
+import 'package:docker_controller/models/app_error.dart';
+import 'docker_service.dart';
 
 class AuthService {
-  AuthService(this._dio);
+  AuthService(this._dockerService);
 
-  final Dio _dio;
+  final DockerService _dockerService;
 
-  Future<String?> login(String username, String password) async {
-    try {
-      final response = await _dio.post(
-        '/login',
-        data: {'username': username, 'password': password},
-      );
-      if (response.statusCode == 200 && response.data != null) {
-        return response.data['token'] as String?;
-      }
-      return null;
-    } catch (e) {
-      return null;
-    }
+  Future<Result<String, AppError>> login(String username, String password) async {
+    final result = await _dockerService.post<Map<String, dynamic>>(
+      '/login',
+      data: {'username': username, 'password': password},
+    );
+
+    return result.fold(
+      (response) {
+        if (response.statusCode == 200 && response.data != null) {
+          final token = response.data!['token'] as String?;
+          if (token != null) {
+            return Success(token);
+          }
+        }
+        return Failure(AppError(message: 'Login failed: Invalid response from server'));
+      },
+      (failure) => Failure(failure),
+    );
   }
 }

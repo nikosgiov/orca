@@ -1,17 +1,17 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_paddings.dart';
+import 'package:docker_controller/constants/app_text_styles.dart';
+import 'package:docker_controller/providers/auth_provider.dart';
+import 'package:docker_controller/providers/system_info_provider.dart';
+import 'package:docker_controller/widgets/app_background.dart';
+import 'package:docker_controller/widgets/app_gradient_top_bar.dart';
+import 'package:docker_controller/widgets/info_card.dart';
+import 'package:docker_controller/widgets/info_row.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../constants/app_colors.dart';
-import '../constants/app_paddings.dart';
-import '../constants/app_strings.dart';
-import '../constants/app_text_styles.dart';
-import '../providers/auth_provider.dart';
-import '../providers/system_info_provider.dart';
-import '../widgets/app_background.dart';
-import '../widgets/app_gradient_top_bar.dart';
-import '../widgets/info_card.dart';
-import '../widgets/info_row.dart';
+import '../l10n/app_localizations.dart';
 
 class SystemInfoScreen extends StatelessWidget {
   const SystemInfoScreen({super.key});
@@ -55,7 +55,7 @@ class _SystemInfoScreenBodyState extends State<_SystemInfoScreenBody> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppGradientTopBar(
-          title: AppStrings.systemInfoTitle,
+          title: AppLocalizations.of(context)!.systemInfoTitle,
           leftWidget: IconButton(
             onPressed: () => context.pop(),
             icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
@@ -97,7 +97,7 @@ class _SystemInfoScreenBodyState extends State<_SystemInfoScreenBody> {
     final staticInfo = provider.staticInfo;
     final os = staticInfo?['os'] ?? {};
     return InfoCard(
-      title: AppStrings.operatingSystem,
+      title: AppLocalizations.of(context)!.operatingSystem,
       children: [
         Row(
           children: [
@@ -116,24 +116,24 @@ class _SystemInfoScreenBodyState extends State<_SystemInfoScreenBody> {
               ),
             ),
             const SizedBox(width: 12),
-            const Text(
-              AppStrings.operatingSystem,
+            Text(
+              AppLocalizations.of(context)!.operatingSystem,
               style: AppTextStyles.heading2,
             ),
           ],
         ),
         const SizedBox(height: 16),
         InfoRow(
-          label: 'System',
+          label: AppLocalizations.of(context)!.system,
           value: os['system'] ?? '',
           icon: Icons.desktop_windows,
         ),
         InfoRow(
-          label: 'Release',
+          label: AppLocalizations.of(context)!.release,
           value: os['release'] ?? '',
           icon: Icons.settings,
         ),
-        InfoRow(label: 'Version', value: os['version'] ?? '', icon: Icons.info),
+        InfoRow(label: AppLocalizations.of(context)!.version, value: os['version'] ?? '', icon: Icons.info),
       ],
     );
   }
@@ -144,7 +144,7 @@ class _SystemInfoScreenBodyState extends State<_SystemInfoScreenBody> {
     final gpu = staticInfo?['gpu'] ?? {};
     final disk = staticInfo?['disk'] ?? {};
     return InfoCard(
-      title: AppStrings.hardware,
+      title: AppLocalizations.of(context)!.hardware,
       children: [
         Row(
           children: [
@@ -159,28 +159,28 @@ class _SystemInfoScreenBodyState extends State<_SystemInfoScreenBody> {
               child: const Icon(Icons.memory, color: AppColors.white, size: 20),
             ),
             const SizedBox(width: 12),
-            const Text(AppStrings.hardware, style: AppTextStyles.heading2),
+            Text(AppLocalizations.of(context)!.hardware, style: AppTextStyles.heading2),
           ],
         ),
         const SizedBox(height: 16),
         InfoRow(
-          label: 'CPU Cores',
+          label: AppLocalizations.of(context)!.cpuCores,
           value: cpu['cores']?.toString() ?? '',
           icon: Icons.memory,
         ),
         InfoRow(
-          label: 'CPU Threads',
+          label: AppLocalizations.of(context)!.cpuThreads,
           value: cpu['threads']?.toString() ?? '',
           icon: Icons.memory,
         ),
         InfoRow(
-          label: 'CPU Model',
+          label: AppLocalizations.of(context)!.cpuModel,
           value: cpu['model'] ?? '',
           icon: Icons.memory,
           isMultiline: true,
         ),
         InfoRow(
-          label: 'GPU',
+          label: AppLocalizations.of(context)!.gpu,
           value: (gpu['count'] != null && gpu['count'] > 1)
               ? '${gpu['name']} (x${gpu['count']})'
               : gpu['name'] ?? 'N/A',
@@ -188,12 +188,12 @@ class _SystemInfoScreenBodyState extends State<_SystemInfoScreenBody> {
           isMultiline: true,
         ),
         InfoRow(
-          label: 'Memory',
+          label: AppLocalizations.of(context)!.memory,
           value: provider.getMemoryInfo(),
           icon: Icons.storage,
         ),
         InfoRow(
-          label: 'Disk',
+          label: AppLocalizations.of(context)!.disk,
           value: disk['total_gb'] != null
               ? '${disk['total_gb'] is num ? (disk['total_gb'] as num).toStringAsFixed(1) : disk['total_gb']} GB'
               : '',

@@ -1,6 +1,6 @@
-import '../core/di/service_locator.dart';
-import '../models/docker_container.dart';
-import '../services/container_service.dart';
+import 'package:docker_controller/core/di/service_locator.dart';
+import 'package:docker_controller/models/docker_container.dart';
+import 'package:docker_controller/services/container_service.dart';
 import 'docker_stats_utils.dart';
 
 class ResourceStatsUtils {
@@ -49,6 +49,7 @@ class ResourceStatsUtils {
     if (resourceStats == null) {
       return {};
     }
+
     double totalCpu = 0.0;
     double totalMemory = 0.0;
     int activeCount = 0;
@@ -62,19 +63,14 @@ class ResourceStatsUtils {
       final batch = runningContainers.skip(i).take(maxConcurrent);
       final batchResults = await Future.wait(
         batch.map((entry) async {
-          final containerId = entry.key;
-          try {
-            final stats = await getIt<ContainerService>()
-                .getContainerStats(containerId)
-                .timeout(const Duration(seconds: 2));
-            if (stats != null) {
-              return {
-                'cpu': DockerStatsUtils.calculateCpuUsage(stats),
-                'memory': DockerStatsUtils.calculateMemoryUsage(stats),
-              };
-            }
-          } catch (_) {}
-          return null;
+          final result = await getIt<ContainerService>().getContainerStats(entry.key);
+          return result.fold(
+            (stats) => {
+              'cpu': DockerStatsUtils.calculateCpuUsage(stats),
+              'memory': DockerStatsUtils.calculateMemoryUsage(stats),
+            },
+            (_) => null,
+          );
         }),
       );
       for (final result in batchResults) {

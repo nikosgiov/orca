@@ -1,8 +1,8 @@
+import 'package:docker_controller/providers/app_config_provider.dart';
+import 'package:docker_controller/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../providers/app_config_provider.dart';
-import '../providers/auth_provider.dart';
 import '../screens/compose/compose_screen.dart';
 import '../screens/connection_screen.dart';
 import '../screens/container_detail_screen.dart';

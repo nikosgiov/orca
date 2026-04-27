@@ -1,22 +1,10 @@
 import 'dart:ui' as ui;
+
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_gradients.dart';
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
-import '../constants/app_gradients.dart';
 
-class _NavItem {
-  const _NavItem(this.icon, this.label);
-  final IconData icon;
-  final String label;
-}
-
-const _navItems = [
-  _NavItem(Icons.grid_view_rounded, 'Dash'),
-  _NavItem(Icons.view_in_ar_rounded, 'Containers'),
-  _NavItem(Icons.layers_rounded, 'Images'),
-  _NavItem(Icons.analytics_rounded, 'Monitor'),
-  _NavItem(Icons.account_tree_rounded, 'Compose'),
-  _NavItem(Icons.settings_rounded, 'Config'),
-];
+import '../l10n/app_localizations.dart';
 
 /// The main layout shell of the application, including the floating navigation bar.
 class MainScreen extends StatelessWidget {
@@ -54,6 +42,15 @@ class _FloatingNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final navItems = [
+      _NavItem(Icons.grid_view_rounded, AppLocalizations.of(context)!.navDash),
+      _NavItem(Icons.view_in_ar_rounded, AppLocalizations.of(context)!.navContainers),
+      _NavItem(Icons.layers_rounded, AppLocalizations.of(context)!.navImages),
+      _NavItem(Icons.analytics_rounded, AppLocalizations.of(context)!.navMonitor),
+      _NavItem(Icons.account_tree_rounded, AppLocalizations.of(context)!.navCompose),
+      _NavItem(Icons.settings_rounded, AppLocalizations.of(context)!.navConfig),
+    ];
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(12, 0, 12, 20),
@@ -76,10 +73,10 @@ class _FloatingNavBar extends StatelessWidget {
                 ],
               ),
               child: Row(
-                children: List.generate(_navItems.length, (i) {
+                children: List.generate(navItems.length, (i) {
                   return Expanded(
                     child: _NavItemWidget(
-                      item: _navItems[i],
+                      item: navItems[i],
                       isActive: currentIndex == i,
                       onTap: () => onTap(i),
                     ),
@@ -92,6 +89,12 @@ class _FloatingNavBar extends StatelessWidget {
       ),
     );
   }
+}
+
+class _NavItem {
+  const _NavItem(this.icon, this.label);
+  final IconData icon;
+  final String label;
 }
 
 class _NavItemWidget extends StatelessWidget {

@@ -1,5 +1,5 @@
+import 'package:docker_controller/constants/app_dimensions.dart';
 import 'package:flutter/material.dart';
-import '../constants/app_dimensions.dart';
 
 /// A tappable [InputDecorator] tile that looks like a form field but opens a
 /// bottom sheet or modal on tap (e.g. auth type, advanced options).

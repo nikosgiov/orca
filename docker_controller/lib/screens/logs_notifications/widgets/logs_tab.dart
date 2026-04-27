@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../constants/app_colors.dart';
 import '../../../constants/app_paddings.dart';
-import '../../../constants/app_strings.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../models/log_level.dart';
 import '../../../providers/logs_notifications_provider.dart';
 import '../../../widgets/app_button.dart';
@@ -39,7 +39,7 @@ class LogsTab extends StatelessWidget {
                         fontSize: 13,
                       ),
                       decoration: InputDecoration(
-                        labelText: AppStrings.logLevelLabel,
+                        labelText: AppLocalizations.of(context)!.logLevelLabel,
                         labelStyle: const TextStyle(color: AppColors.textMuted),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
@@ -58,7 +58,7 @@ class LogsTab extends StatelessWidget {
                       items: LogLevel.values.map((level) {
                         return DropdownMenuItem(
                           value: level,
-                          child: Text(level.label),
+                          child: Text(level.getLabel(AppLocalizations.of(context)!)),
                         );
                       }).toList(),
                       onChanged: (value) {
@@ -77,7 +77,7 @@ class LogsTab extends StatelessWidget {
                         fontSize: 13,
                       ),
                       decoration: InputDecoration(
-                        labelText: AppStrings.containerLabel,
+                        labelText: AppLocalizations.of(context)!.containerLabel,
                         labelStyle: const TextStyle(color: AppColors.textMuted),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
@@ -94,9 +94,9 @@ class LogsTab extends StatelessWidget {
                         contentPadding: AppPaddings.dropdownContentPadding,
                       ),
                       items: [
-                        const DropdownMenuItem(
+                        DropdownMenuItem(
                           value: 'All',
-                          child: Text(AppStrings.logLevelAll),
+                          child: Text(AppLocalizations.of(context)!.all),
                         ),
                         ...provider.containers.map(
                           (c) => DropdownMenuItem(
@@ -123,15 +123,15 @@ class LogsTab extends StatelessWidget {
                     activeThumbColor: AppColors.primary,
                   ),
                   const SizedBox(width: 8),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      AppStrings.followLogs,
-                      style: TextStyle(color: AppColors.textPrimary),
+                      AppLocalizations.of(context)!.followLogs,
+                      style: const TextStyle(color: AppColors.textPrimary),
                     ),
                   ),
                   const SizedBox(width: 8),
                   AppButton(
-                    label: AppStrings.clear,
+                    label: AppLocalizations.of(context)!.clear,
                     onPressed: provider.clearLogs,
                     color: AppColors.slate400,
                     textColor: AppColors.white,

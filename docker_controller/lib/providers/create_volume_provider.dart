@@ -1,38 +1,53 @@
+import 'package:docker_controller/core/di/service_locator.dart';
+import 'package:docker_controller/providers/auth_provider.dart';
+import 'package:docker_controller/services/volume_service.dart';
 import 'package:flutter/material.dart';
 
-import '../core/di/service_locator.dart';
-import '../providers/auth_provider.dart';
-import '../services/volume_service.dart';
+import '../l10n/app_localizations.dart';
 
+/// Provider responsible for handling the creation of a new Docker volume.
 class CreateVolumeProvider extends ChangeNotifier {
   CreateVolumeProvider(this.authProvider);
   final AuthProvider authProvider;
+
+  /// The [GlobalKey] for the creation form.
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
   // Step management
+  /// The currently active step in the creation wizard.
   int currentStep = 0;
-  final List<String> stepTitles = ['Basic Info', 'Advanced Options', 'Review'];
 
   // Form controllers
+  /// Controller for the volume name input field.
   final TextEditingController nameController = TextEditingController();
+
+  /// The selected driver for the new volume (e.g., 'local').
   String selectedDriver = 'local';
 
   // Dynamic lists
+  /// List of custom driver options for the volume.
   List<Map<String, String>> driverOptions = [];
+
+  /// List of labels to apply to the volume.
   List<Map<String, String>> labels = [];
 
   // State
+  /// Whether the creation process is in progress.
   bool isCreating = false;
+
+  /// The most recent error message, if any.
   String? error;
 
   // Step navigation
+  /// Advances to the next step in the wizard.
   void nextStep() {
-    if (currentStep < stepTitles.length - 1) {
+    if (currentStep < 2) {
       currentStep++;
       notifyListeners();
     }
   }
 
+  /// Returns to the previous step in the wizard.
   void previousStep() {
     if (currentStep > 0) {
       currentStep--;
@@ -93,6 +108,9 @@ class CreateVolumeProvider extends ChangeNotifier {
   }
 
   // Volume creation
+  /// Orchestrates the volume creation process using the current form data.
+  ///
+  /// Returns the name of the created volume on success, or null on failure.
   Future<String?> createVolume(BuildContext context) async {
     if (!(formKey.currentState?.validate() ?? false)) {
       return null;
@@ -103,8 +121,8 @@ class CreateVolumeProvider extends ChangeNotifier {
       if (option['key']?.isNotEmpty == true &&
           option['value']?.isEmpty == true) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Driver option value cannot be empty'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.driverOptionValueRequired),
             backgroundColor: Colors.red,
           ),
         );
@@ -113,8 +131,8 @@ class CreateVolumeProvider extends ChangeNotifier {
       if (option['key']?.isEmpty == true &&
           option['value']?.isNotEmpty == true) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Driver option key cannot be empty'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.driverOptionKeyRequired),
             backgroundColor: Colors.red,
           ),
         );
@@ -125,8 +143,8 @@ class CreateVolumeProvider extends ChangeNotifier {
     for (final label in labels) {
       if (label['key']?.isNotEmpty == true && label['value']?.isEmpty == true) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Label value cannot be empty'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.labelValueRequired),
             backgroundColor: Colors.red,
           ),
         );
@@ -134,8 +152,8 @@ class CreateVolumeProvider extends ChangeNotifier {
       }
       if (label['key']?.isEmpty == true && label['value']?.isNotEmpty == true) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Label key cannot be empty'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.labelKeyRequired),
             backgroundColor: Colors.red,
           ),
         );
@@ -146,8 +164,8 @@ class CreateVolumeProvider extends ChangeNotifier {
     final connectionConfig = authProvider.connectionConfig;
     if (connectionConfig == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Not connected to Docker. Please connect first.'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.notConnectedDocker),
           backgroundColor: Colors.red,
         ),
       );
@@ -182,26 +200,37 @@ class CreateVolumeProvider extends ChangeNotifier {
         labels: labelsMap.isNotEmpty ? labelsMap : null,
       );
 
-      if (result) {
-        return nameController.text;
-      } else {
-        error = 'Failed to create volume';
-        if (!context.mounted) {
+      return result.fold(
+        (success) {
+          if (success) {
+            return nameController.text;
+          } else {
+            error = 'Failed to create volume';
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(AppLocalizations.of(context)!.failedToCreateVolume), backgroundColor: Colors.red),
+              );
+            }
+            return null;
+          }
+        },
+        (failure) {
+          error = failure.message;
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(failure.message), backgroundColor: Colors.red),
+            );
+          }
           return null;
-        }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error!), backgroundColor: Colors.red),
-        );
-        return null;
-      }
+        },
+      );
     } catch (e) {
       error = 'Error creating volume: $e';
-      if (!context.mounted) {
-        return null;
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.errorCreatingVolume(e.toString())), backgroundColor: Colors.red),
+        );
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error!), backgroundColor: Colors.red),
-      );
       return null;
     } finally {
       isCreating = false;

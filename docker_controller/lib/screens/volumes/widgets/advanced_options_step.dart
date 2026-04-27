@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+
 import '../../../constants/app_colors.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../providers/create_volume_provider.dart';
 import '../../../utils/validators.dart';
 
@@ -9,6 +11,7 @@ class AdvancedOptionsStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -30,9 +33,9 @@ class AdvancedOptionsStep extends StatelessWidget {
                         color: AppColors.secondary,
                       ),
                       const SizedBox(width: 8),
-                      const Text(
-                        'Driver Options',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                      Text(
+                        l10n.driverOptions,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const Spacer(),
                       IconButton(
@@ -41,17 +44,17 @@ class AdvancedOptionsStep extends StatelessWidget {
                           Icons.add,
                           color: AppColors.secondary,
                         ),
-                        tooltip: 'Add driver option',
+                        tooltip: l10n.addOption,
                       ),
                     ],
                   ),
                 ),
                 if (provider.driverOptions.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.all(16),
+                  Padding(
+                    padding: const EdgeInsets.all(16),
                     child: Text(
-                      'No driver options added',
-                      style: TextStyle(color: Colors.grey),
+                      l10n.noOptionsAdded,
+                      style: const TextStyle(color: Colors.grey),
                     ),
                   ),
                 ...provider.driverOptions.asMap().entries.map((entry) {
@@ -66,27 +69,36 @@ class AdvancedOptionsStep extends StatelessWidget {
                       children: [
                         Expanded(
                           child: TextFormField(
-                            decoration: const InputDecoration(labelText: 'Key'),
+                            decoration: InputDecoration(labelText: l10n.keyLabel),
                             onChanged: (value) => provider.updateDriverOption(
                               index,
                               value,
                               option['value'] ?? '',
                             ),
-                            validator: Validators.validateDriverOptionKey,
+                            validator: (val) => Validators.validateDriverOptionKey(
+                              val,
+                              requiredError: l10n.driverOptionKeyRequired,
+                              invalidError: l10n.driverOptionKeyInvalid,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: TextFormField(
-                            decoration: const InputDecoration(
-                              labelText: 'Value',
+                            decoration: InputDecoration(
+                              labelText: l10n.valueLabel,
                             ),
                             onChanged: (value) => provider.updateDriverOption(
                               index,
                               option['key'] ?? '',
                               value,
                             ),
-                            validator: Validators.validateDriverOptionValue,
+                            validator: (val) => Validators.validateDriverOptionValue(
+                              val,
+                              requiredError: l10n.driverOptionValueRequired,
+                              noTabsError: l10n.driverOptionValueNoTabs,
+                              tooLongError: l10n.driverOptionValueTooLong,
+                            ),
                           ),
                         ),
                         IconButton(
@@ -116,9 +128,9 @@ class AdvancedOptionsStep extends StatelessWidget {
                     children: [
                       const Icon(Icons.label, color: AppColors.secondary),
                       const SizedBox(width: 8),
-                      const Text(
-                        'Labels',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                      Text(
+                        l10n.labels,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const Spacer(),
                       IconButton(
@@ -127,17 +139,17 @@ class AdvancedOptionsStep extends StatelessWidget {
                           Icons.add,
                           color: AppColors.secondary,
                         ),
-                        tooltip: 'Add label',
+                        tooltip: l10n.addLabel,
                       ),
                     ],
                   ),
                 ),
                 if (provider.labels.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.all(16),
+                  Padding(
+                    padding: const EdgeInsets.all(16),
                     child: Text(
-                      'No labels added',
-                      style: TextStyle(color: Colors.grey),
+                      l10n.noLabelsAdded,
+                      style: const TextStyle(color: Colors.grey),
                     ),
                   ),
                 ...provider.labels.asMap().entries.map((entry) {
@@ -152,27 +164,36 @@ class AdvancedOptionsStep extends StatelessWidget {
                       children: [
                         Expanded(
                           child: TextFormField(
-                            decoration: const InputDecoration(labelText: 'Key'),
+                            decoration: InputDecoration(labelText: l10n.keyLabel),
                             onChanged: (value) => provider.updateLabel(
                               index,
                               value,
                               label['value'] ?? '',
                             ),
-                            validator: Validators.validateLabelKey,
+                            validator: (val) => Validators.validateLabelKey(
+                              val,
+                              requiredError: l10n.labelKeyRequired,
+                              invalidError: l10n.labelKeyInvalid,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: TextFormField(
-                            decoration: const InputDecoration(
-                              labelText: 'Value',
+                            decoration: InputDecoration(
+                              labelText: l10n.valueLabel,
                             ),
                             onChanged: (value) => provider.updateLabel(
                               index,
                               label['key'] ?? '',
                               value,
                             ),
-                            validator: Validators.validateLabelValue,
+                            validator: (val) => Validators.validateLabelValue(
+                              val,
+                              requiredError: l10n.labelValueRequired,
+                              noTabsError: l10n.labelValueNoTabs,
+                              tooLongError: l10n.labelValueTooLong,
+                            ),
                           ),
                         ),
                         IconButton(

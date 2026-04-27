@@ -82,23 +82,23 @@ class NotificationService {
       throw Exception('Device token not available');
     }
 
-    try {
-      final response = await _dockerService.post(
-        '/register',
-        data: {
-          'token': _deviceToken,
-          'enable_docker_monitoring': _dockerMonitoringEnabled,
-          'enable_resource_monitoring': _resourceMonitoringEnabled,
-        },
-      );
+    final result = await _dockerService.post(
+      '/register',
+      data: {
+        'token': _deviceToken,
+        'enable_docker_monitoring': _dockerMonitoringEnabled,
+        'enable_resource_monitoring': _resourceMonitoringEnabled,
+      },
+    );
 
-      if (response.statusCode != 200) {
-        throw Exception('Failed to register: ${response.statusCode}');
-      }
-    } catch (e) {
-      debugPrint('NotificationService: Registration error: $e');
-      rethrow;
-    }
+    result.fold(
+      (response) {
+        if (response.statusCode != 200) {
+          throw Exception('Failed to register: ${response.statusCode}');
+        }
+      },
+      (failure) => throw Exception(failure.message),
+    );
   }
 
   Future<void> unregisterFromNotifications({String? baseUrl}) async {
@@ -106,18 +106,19 @@ class NotificationService {
       return;
     }
 
-    try {
-      final response = await _dockerService.post(
-        '/unregister',
-        data: {'token': _deviceToken},
-      );
+    final result = await _dockerService.post(
+      '/unregister',
+      data: {'token': _deviceToken},
+    );
 
-      if (response.statusCode != 200) {
-        debugPrint('NotificationService: Unregister failed: ${response.statusCode}');
-      }
-    } catch (e) {
-      debugPrint('NotificationService: Unregister error: $e');
-    }
+    result.fold(
+      (response) {
+        if (response.statusCode != 200) {
+          debugPrint('NotificationService: Unregister failed: ${response.statusCode}');
+        }
+      },
+      (failure) => debugPrint('NotificationService: Unregister error: ${failure.message}'),
+    );
   }
 
   Future<void> updateThresholds({
@@ -127,44 +128,45 @@ class NotificationService {
     double? gpuMemoryThreshold,
     String? baseUrl,
   }) async {
-    try {
-      final response = await _dockerService.post(
-        '/thresholds',
-        data: {
-          if (cpuThreshold != null) 'cpu_threshold': cpuThreshold,
-          if (memoryThreshold != null) 'memory_threshold': memoryThreshold,
-          if (gpuLoadThreshold != null) 'gpu_load_threshold': gpuLoadThreshold,
-          if (gpuMemoryThreshold != null)
-            'gpu_memory_threshold': gpuMemoryThreshold,
-        },
-      );
+    final result = await _dockerService.post(
+      '/thresholds',
+      data: {
+        if (cpuThreshold != null) 'cpu_threshold': cpuThreshold,
+        if (memoryThreshold != null) 'memory_threshold': memoryThreshold,
+        if (gpuLoadThreshold != null) 'gpu_load_threshold': gpuLoadThreshold,
+        if (gpuMemoryThreshold != null) 'gpu_memory_threshold': gpuMemoryThreshold,
+      },
+    );
 
-      if (response.statusCode == 200 && response.data != null) {
-        final Map<String, dynamic> thresholdsData =
-            Map<String, dynamic>.from(response.data!['thresholds']);
-        
-        thresholdsData.forEach((key, value) {
-          _thresholds[key] = (value as num).toDouble();
-        });
-
-        if (baseUrl != null) {
-          await savePreferences(baseUrl);
+    await result.fold(
+      (response) async {
+        if (response.statusCode == 200 && response.data != null) {
+          final thresholdsData = Map<String, dynamic>.from(response.data!['thresholds']);
+          thresholdsData.forEach((key, value) {
+            _thresholds[key] = (value as num).toDouble();
+          });
+          if (baseUrl != null) {
+            await savePreferences(baseUrl);
+          }
+        } else {
+          throw Exception('Failed to update thresholds: ${response.statusCode}');
         }
-      } else {
-        throw Exception('Failed to update thresholds: ${response.statusCode}');
-      }
-    } catch (e) {
-      debugPrint('NotificationService: Threshold update error: $e');
-      rethrow;
-    }
+      },
+      (failure) => throw Exception(failure.message),
+    );
   }
 
   Future<Map<String, dynamic>> getMonitoringStatus() async {
-    final response = await _dockerService.get<Map<String, dynamic>>('/status');
-    if (response.statusCode == 200 && response.data != null) {
-      return response.data!;
-    }
-    throw Exception('Failed to get status: ${response.statusCode}');
+    final result = await _dockerService.get<Map<String, dynamic>>('/status');
+    return result.fold(
+      (response) {
+        if (response.statusCode == 200 && response.data != null) {
+          return response.data!;
+        }
+        throw Exception('Failed to get status: ${response.statusCode}');
+      },
+      (failure) => throw Exception(failure.message),
+    );
   }
 
   Future<void> sendTestNotification(String notificationType) async {
@@ -172,14 +174,19 @@ class NotificationService {
       throw Exception('Device token not available');
     }
 
-    final response = await _dockerService.post(
+    final result = await _dockerService.post(
       '/test',
       data: {'token': _deviceToken, 'notification_type': notificationType},
     );
 
-    if (response.statusCode != 200) {
-      throw Exception('Failed to send test: ${response.statusCode}');
-    }
+    result.fold(
+      (response) {
+        if (response.statusCode != 200) {
+          throw Exception('Failed to send test: ${response.statusCode}');
+        }
+      },
+      (failure) => throw Exception(failure.message),
+    );
   }
 
   void _handleForegroundMessage(RemoteMessage message) {

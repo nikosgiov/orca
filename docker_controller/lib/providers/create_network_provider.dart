@@ -1,45 +1,57 @@
+import 'package:docker_controller/core/di/service_locator.dart';
+import 'package:docker_controller/providers/auth_provider.dart';
+import 'package:docker_controller/services/network_service.dart';
 import 'package:flutter/material.dart';
 
-import '../core/di/service_locator.dart';
-import '../providers/auth_provider.dart';
-import '../services/network_service.dart';
-
+/// Provider responsible for handling the creation of a new Docker network.
 class CreateNetworkProvider extends ChangeNotifier {
   CreateNetworkProvider(this.authProvider);
   final AuthProvider authProvider;
+
+  /// The [GlobalKey] for the creation form.
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
   // Step management
+  /// The currently active step in the creation wizard.
   int currentStep = 0;
-  final List<String> stepTitles = [
-    'Basic Info',
-    'IPAM Config',
-    'Advanced Options',
-    'Review',
-  ];
 
   // Form controllers
+  /// Controller for the network name input field.
   final TextEditingController nameController = TextEditingController();
+
+  /// The selected driver for the new network (e.g., 'bridge').
   String selectedDriver = 'bridge';
+
+  /// Controller for the subnet configuration.
   final TextEditingController subnetController = TextEditingController();
+
+  /// Controller for the gateway configuration.
   final TextEditingController gatewayController = TextEditingController();
 
   // Dynamic lists
+  /// List of custom options for the network.
   List<Map<String, String>> options = [];
+
+  /// List of labels to apply to the network.
   List<Map<String, String>> labels = [];
 
   // State
+  /// Whether the creation process is in progress.
   bool isCreating = false;
+
+  /// The most recent error message, if any.
   String? error;
 
   // Step navigation
+  /// Advances to the next step in the wizard.
   void nextStep() {
-    if (currentStep < stepTitles.length - 1) {
+    if (currentStep < 3) {
       currentStep++;
       notifyListeners();
     }
   }
 
+  /// Returns to the previous step in the wizard.
   void previousStep() {
     if (currentStep > 0) {
       currentStep--;
@@ -110,6 +122,9 @@ class CreateNetworkProvider extends ChangeNotifier {
   }
 
   // Network creation
+  /// Orchestrates the network creation process using the current form data.
+  ///
+  /// Returns a tuple containing success status and an optional error message.
   Future<(bool, String?)> createNetwork() async {
     if (!(formKey.currentState?.validate() ?? false)) {
       return (false, null);
@@ -178,7 +193,7 @@ class CreateNetworkProvider extends ChangeNotifier {
         };
       }
 
-      final success = await getIt<NetworkService>().createNetwork(
+      final result = await getIt<NetworkService>().createNetwork(
         nameController.text,
         driver: selectedDriver,
         options: optionsMap.isNotEmpty ? optionsMap : null,
@@ -186,12 +201,20 @@ class CreateNetworkProvider extends ChangeNotifier {
         ipam: ipamConfig,
       );
 
-      if (success) {
-        return (true, nameController.text);
-      } else {
-        error = 'Failed to create network';
-        return (false, error);
-      }
+      return result.fold(
+        (success) {
+          if (success) {
+            return (true, nameController.text);
+          } else {
+            error = 'Failed to create network';
+            return (false, error);
+          }
+        },
+        (failure) {
+          error = failure.message;
+          return (false, error);
+        },
+      );
     } catch (e) {
       error = 'Error creating network: $e';
       return (false, error);

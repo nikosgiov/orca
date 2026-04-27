@@ -1,12 +1,12 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_text_styles.dart';
+import 'package:docker_controller/models/docker_container.dart';
+import 'package:docker_controller/providers/containers_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../constants/app_colors.dart';
-import '../constants/app_strings.dart';
-import '../constants/app_text_styles.dart';
-import '../models/docker_container.dart';
-import '../providers/containers_provider.dart';
+import '../l10n/app_localizations.dart';
 
 class ContainerCard extends StatelessWidget {
   const ContainerCard({super.key, required this.container});
@@ -25,7 +25,7 @@ class ContainerCard extends StatelessWidget {
     final state = container.state;
     final uptime = container.uptime;
     final portDisplay = container.ports.isEmpty
-        ? AppStrings.noPorts
+        ? AppLocalizations.of(context)!.noPorts
         : container.portDisplay;
 
     Color statusColor;
@@ -36,22 +36,22 @@ class ContainerCard extends StatelessWidget {
       case 'running':
         statusColor = AppColors.success;
         statusIcon = Icons.play_circle_filled;
-        displayStatus = AppStrings.statusRunning;
+        displayStatus = AppLocalizations.of(context)!.statusRunning;
         break;
       case 'stopped':
         statusColor = AppColors.error;
         statusIcon = Icons.stop_circle;
-        displayStatus = AppStrings.statusStopped;
+        displayStatus = AppLocalizations.of(context)!.statusStopped;
         break;
       case 'exited':
         statusColor = AppColors.warning;
         statusIcon = Icons.error;
-        displayStatus = AppStrings.statusExited;
+        displayStatus = AppLocalizations.of(context)!.statusExited;
         break;
       default:
         statusColor = AppColors.textMuted;
         statusIcon = Icons.help;
-        displayStatus = AppStrings.statusUnknown;
+        displayStatus = AppLocalizations.of(context)!.statusUnknown;
     }
 
     return Container(
@@ -98,15 +98,15 @@ class ContainerCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          _CardInfoRow(icon: Icons.image_rounded, label: 'Image', value: image),
+          _CardInfoRow(icon: Icons.image_rounded, label: AppLocalizations.of(context)!.labelImage, value: image),
           _CardInfoRow(
             icon: Icons.link_rounded,
-            label: 'Ports',
+            label: AppLocalizations.of(context)!.labelPorts,
             value: portDisplay,
           ),
           _CardInfoRow(
             icon: Icons.schedule_rounded,
-            label: 'Uptime',
+            label: AppLocalizations.of(context)!.labelUptime,
             value: uptime,
           ),
           const SizedBox(height: 12),
@@ -115,8 +115,8 @@ class ContainerCard extends StatelessWidget {
               Expanded(
                 child: _GlassActionButton(
                   label: state == 'running'
-                      ? AppStrings.actionStop
-                      : AppStrings.actionStart,
+                      ? AppLocalizations.of(context)!.actionStop
+                      : AppLocalizations.of(context)!.actionStart,
                   color: state == 'running'
                       ? AppColors.error
                       : AppColors.success,
@@ -143,7 +143,7 @@ class ContainerCard extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: _GlassActionButton(
-                  label: AppStrings.actionDetails,
+                  label: AppLocalizations.of(context)!.actionDetails,
                   color: AppColors.primary,
                   onPressed: () {
                     context.pushNamed(

@@ -2,11 +2,11 @@ import 'dart:developer' as developer;
 import 'package:firebase_core/firebase_core.dart';
 
 class FirebaseService {
-  static const String _logPrefix = 'FirebaseService';
+  final String _logPrefix = 'FirebaseService';
 
   /// Initializes Firebase with the provided configuration map.
   /// Does nothing if Firebase is already initialized.
-  static Future<void> initialize(Map<String, dynamic> config) async {
+  Future<void> initialize(Map<String, dynamic> config) async {
     try {
       if (Firebase.apps.isEmpty) {
         await Firebase.initializeApp(
@@ -29,13 +29,12 @@ class FirebaseService {
     }
   }
 
-  /// Deletes the default Firebase app if it exists.
-  static Future<void> terminate() async {
+  /// Safely stops Firebase services. 
+  /// Note: We don't delete the default app instance as it causes errors in Flutter.
+  Future<void> terminate() async {
     try {
-      if (Firebase.apps.isNotEmpty) {
-        await Firebase.app().delete();
-        developer.log('Firebase terminated successfully', name: _logPrefix);
-      }
+      // Clear or stop any global listeners if we had them.
+      developer.log('Firebase services marked for termination', name: _logPrefix);
     } catch (e) {
       developer.log(
         'Firebase termination error: $e',

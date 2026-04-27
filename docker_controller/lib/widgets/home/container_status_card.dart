@@ -1,5 +1,6 @@
+import 'package:docker_controller/constants/app_colors.dart';
 import 'package:flutter/material.dart';
-import '../../constants/app_colors.dart';
+
 import 'home_widgets.dart';
 
 class ContainerStatusCard extends StatelessWidget {

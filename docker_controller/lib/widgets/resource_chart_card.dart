@@ -1,12 +1,14 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_text_styles.dart';
+import 'package:docker_controller/models/resource_data_point.dart';
+import 'package:docker_controller/utils/data_formatting_utils.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
-import '../constants/app_colors.dart';
-import '../constants/app_strings.dart';
-import '../constants/app_text_styles.dart';
-import '../models/resource_data_point.dart';
-import '../utils/data_formatting_utils.dart';
+import '../l10n/app_localizations.dart';
 import 'app_card.dart';
+
+enum ResourceMetricType { cpu, memory, gpu, network, disk }
 
 class ResourceChartCard extends StatelessWidget {
 
@@ -16,6 +18,7 @@ class ResourceChartCard extends StatelessWidget {
     required this.currentValue,
     required this.icon,
     required this.color,
+    required this.metricType,
     required this.data,
     required this.dataPoints,
   });
@@ -23,13 +26,14 @@ class ResourceChartCard extends StatelessWidget {
   final String currentValue;
   final IconData icon;
   final Color color;
+  final ResourceMetricType metricType;
   final List<FlSpot> data;
   final List<ResourceDataPoint> dataPoints;
 
   @override
   Widget build(BuildContext context) {
-    final isNetwork = title == AppStrings.networkIO;
-    final isDisk = title == AppStrings.diskIO;
+    final isNetwork = metricType == ResourceMetricType.network;
+    final isDisk = metricType == ResourceMetricType.disk;
     final isSpeed = isNetwork || isDisk;
 
     return AppCard(
@@ -57,9 +61,9 @@ class ResourceChartCard extends StatelessWidget {
           SizedBox(
             height: 120,
             child: data.isEmpty
-                ? const Center(
+                ? Center(
                     child: Text(
-                      AppStrings.noDataAvailable,
+                      AppLocalizations.of(context)!.noDataAvailable,
                       style: AppTextStyles.caption,
                     ),
                   )
@@ -77,10 +81,10 @@ class ResourceChartCard extends StatelessWidget {
                               String tooltipText;
                               if (isSpeed) {
                                 tooltipText = DataFormattingUtils.formatNetworkSpeed(y);
-                              } else if (title == AppStrings.cpuUsage ||
-                                  title == 'GPU Usage') {
+                              } else if (metricType == ResourceMetricType.cpu ||
+                                  metricType == ResourceMetricType.gpu) {
                                 tooltipText = DataFormattingUtils.formatPercentage(y);
-                              } else if (title == AppStrings.memoryUsage) {
+                              } else if (metricType == ResourceMetricType.memory) {
                                 tooltipText = '${y.toStringAsFixed(1)} GB';
                               } else {
                                 tooltipText = y.toStringAsFixed(1);

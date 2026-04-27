@@ -1,9 +1,9 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_text_styles.dart';
+import 'package:docker_controller/providers/logs_notifications_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../constants/app_colors.dart';
-import '../constants/app_text_styles.dart';
-import '../providers/logs_notifications_provider.dart';
 import '../screens/logs_notifications/logs_notifications_screen.dart';
 
 /// Transparent, backdrop-blurred app bar matching code.html sticky header.

@@ -1,15 +1,15 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_gradients.dart';
+import 'package:docker_controller/constants/app_paddings.dart';
+import 'package:docker_controller/constants/app_text_styles.dart';
+import 'package:docker_controller/models/app_state.dart';
+import 'package:docker_controller/providers/auth_provider.dart';
+import 'package:docker_controller/providers/container_detail_provider.dart';
+import 'package:docker_controller/widgets/app_gradient_top_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../constants/app_colors.dart';
-import '../constants/app_gradients.dart';
-import '../constants/app_paddings.dart';
-import '../constants/app_strings.dart';
-import '../constants/app_text_styles.dart';
-import '../models/app_state.dart';
-import '../providers/auth_provider.dart';
-import '../providers/container_detail_provider.dart';
-import '../widgets/app_gradient_top_bar.dart';
+import '../l10n/app_localizations.dart';
 import 'container_detail/actions_tab.dart';
 import 'container_detail/info_tab.dart';
 import 'container_detail/logs_tab.dart';
@@ -143,22 +143,22 @@ class _ContainerDetailScreenBodyState extends State<_ContainerDetailScreenBody>
                       fontSize: 9,
                       fontWeight: FontWeight.w400,
                     ),
-                    tabs: const [
+                    tabs: [
                       Tab(
-                        icon: Icon(Icons.info_outline, size: 16),
-                        text: AppStrings.infoTab,
+                        icon: const Icon(Icons.info_outline, size: 16),
+                        text: AppLocalizations.of(context)!.infoTab,
                       ),
                       Tab(
-                        icon: Icon(Icons.analytics_outlined, size: 16),
-                        text: AppStrings.statsTab,
+                        icon: const Icon(Icons.analytics_outlined, size: 16),
+                        text: AppLocalizations.of(context)!.statsTab,
                       ),
                       Tab(
-                        icon: Icon(Icons.description_outlined, size: 16),
-                        text: AppStrings.logsTab,
+                        icon: const Icon(Icons.description_outlined, size: 16),
+                        text: AppLocalizations.of(context)!.logsTab,
                       ),
                       Tab(
-                        icon: Icon(Icons.settings_outlined, size: 16),
-                        text: AppStrings.actionsTab,
+                        icon: const Icon(Icons.settings_outlined, size: 16),
+                        text: AppLocalizations.of(context)!.actionsTab,
                       ),
                     ],
                   ),
@@ -177,7 +177,7 @@ class _ContainerDetailScreenBodyState extends State<_ContainerDetailScreenBody>
               ),
             ],
           ),
-          AppError(:final message) => Column(
+          AppStateError(:final failure) => Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(
@@ -186,15 +186,15 @@ class _ContainerDetailScreenBodyState extends State<_ContainerDetailScreenBody>
                 color: AppColors.error,
               ),
               const SizedBox(height: 16),
-              const Text(
-                AppStrings.errorLoadingContainerData,
+              Text(
+                AppLocalizations.of(context)!.errorLoadingContainerData,
                 style: AppTextStyles.heading2,
               ),
               const SizedBox(height: 8),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: Text(
-                  message,
+                  failure.message,
                   style: AppTextStyles.body,
                   textAlign: TextAlign.center,
                 ),
@@ -202,7 +202,7 @@ class _ContainerDetailScreenBodyState extends State<_ContainerDetailScreenBody>
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: provider.loadContainerData,
-                child: const Text('Retry'),
+                child: Text(AppLocalizations.of(context)!.retry),
               ),
             ],
           ),

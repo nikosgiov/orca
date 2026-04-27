@@ -1,22 +1,22 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_delays.dart';
+import 'package:docker_controller/constants/app_dimensions.dart';
+import 'package:docker_controller/constants/app_gradients.dart';
+import 'package:docker_controller/constants/app_text_styles.dart';
+import 'package:docker_controller/models/connection_config.dart';
+import 'package:docker_controller/providers/auth_provider.dart';
+import 'package:docker_controller/utils/validators.dart';
+import 'package:docker_controller/widgets/animated_orca.dart';
+import 'package:docker_controller/widgets/app_input_field.dart';
+import 'package:docker_controller/widgets/app_input_tile.dart';
+import 'package:docker_controller/widgets/app_modal_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../constants/app_colors.dart';
-import '../constants/app_delays.dart';
-import '../constants/app_dimensions.dart';
-import '../constants/app_gradients.dart';
-import '../constants/app_paddings.dart';
-import '../constants/app_strings.dart';
-import '../constants/app_text_styles.dart';
-import '../models/connection_config.dart';
-import '../providers/auth_provider.dart';
-import '../utils/validators.dart';
-import '../widgets/animated_orca.dart';
-import '../widgets/app_input_field.dart';
-import '../widgets/app_input_tile.dart';
-import '../widgets/app_modal_sheet.dart';
+import '../l10n/app_localizations.dart';
 import 'connection/advanced_drawer.dart';
 import 'connection/auth_drawer.dart';
+import 'connection/connection_history_drawer.dart';
 
 class ConnectionScreen extends StatefulWidget {
   const ConnectionScreen({super.key});
@@ -119,9 +119,14 @@ class _ConnectionScreenState extends State<ConnectionScreen>
 
     String? authError;
     if (_selectedAuthType == AuthType.basic) {
-      authError =
-          Validators.validateUsername(_usernameController.text) ??
-          Validators.validatePassword(_passwordController.text);
+      authError = Validators.validateUsername(
+            _usernameController.text,
+            requiredError: AppLocalizations.of(context)!.usernameRequired,
+          ) ??
+          Validators.validatePassword(
+            _passwordController.text,
+            requiredError: AppLocalizations.of(context)!.passwordRequired,
+          );
     }
     if (authError != null) {
       setState(() => _authError = authError);
@@ -182,84 +187,12 @@ class _ConnectionScreenState extends State<ConnectionScreen>
 
     AppModalSheet.show(
       context: context,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            AppStrings.recentConnections,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppColors.slate400,
-            ),
-          ),
-          const SizedBox(height: 20),
-          if (history.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 40.0),
-              child: Center(
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.history,
-                      size: 48,
-                      color: AppColors.slate400.withValues(alpha: 0.2),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      AppStrings.noHistory,
-                      style: AppTextStyles.body.copyWith(
-                        color: AppColors.slate400.withValues(alpha: 0.5),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          else
-            ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.4,
-              ),
-              child: ListView.builder(
-                shrinkWrap: true,
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                itemCount: history.length,
-                itemBuilder: (context, index) {
-                  final uri = history[index];
-                  return ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 4,
-                    ),
-                    leading: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.dns_outlined,
-                        color: AppColors.primary,
-                        size: 20,
-                      ),
-                    ),
-                    title: Text(
-                      uri,
-                      style: AppTextStyles.body.copyWith(
-                        color: AppColors.slate400,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    onTap: () {
-                      _uriController.text = uri;
-                      Navigator.pop(context);
-                    },
-                  );
-                },
-              ),
-            ),
-          const SizedBox(height: 16),
-        ],
+      child: ConnectionHistoryDrawer(
+        history: history,
+        onSelect: (uri) {
+          _uriController.text = uri;
+          Navigator.pop(context);
+        },
       ),
     );
   }
@@ -268,9 +201,9 @@ class _ConnectionScreenState extends State<ConnectionScreen>
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final advancedSummary =
-        '${_stayLoggedIn ? AppStrings.rememberConnection : AppStrings.dontRemember}'
+        '${_stayLoggedIn ? AppLocalizations.of(context)!.rememberConnection : AppLocalizations.of(context)!.dontRemember}'
         ' • '
-        '${_useTls ? AppStrings.tlsEnabled : AppStrings.tlsDisabled}';
+        '${_useTls ? AppLocalizations.of(context)!.tlsEnabled : AppLocalizations.of(context)!.tlsDisabled}';
 
     return Container(
       decoration: const BoxDecoration(gradient: AppGradients.background),
@@ -289,94 +222,105 @@ class _ConnectionScreenState extends State<ConnectionScreen>
             backgroundColor: Colors.transparent,
             resizeToAvoidBottomInset: true,
             body: SafeArea(
-              child: Column(
-                children: [
-                  const SizedBox(height: 20),
-                  const SizedBox(
-                    width: AppDimensions.logoSize,
-                    height: AppDimensions.logoSize,
-                    child: AnimatedOrca(page: 0.0),
+              child: FadeTransition(
+                opacity: _formController,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
                   ),
-                  const SizedBox(height: 16),
-                  FadeTransition(
-                    opacity: _taglineController,
-                    child: Padding(
-                      padding: AppPaddings.pageHorizontalNarrow,
-                      child: Text(
-                        AppStrings.appTagline,
-                        textAlign: TextAlign.center,
-                        style: AppTextStyles.body.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 0.5,
-                        ),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 20),
+                      const SizedBox(
+                        width: AppDimensions.logoSize,
+                        height: AppDimensions.logoSize,
+                        child: AnimatedOrca(page: 0.0),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  if (authProvider.error != null)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24.0,
-                        vertical: 8.0,
-                      ),
-                      child: Text(
-                        authProvider.error!.message,
-                        style: AppTextStyles.errorMessage,
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  Expanded(
-                    child: FadeTransition(
-                      opacity: _formController,
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 12,
-                        ),
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            children: [
-                              AppInputField(
-                                controller: _uriController,
-                                labelText: AppStrings.dockerHostUri,
-                                validator: Validators.validateUri,
-                                prefixIcon: Icons.dns_outlined,
-                                suffixIcon: IconButton(
-                                  icon: const Icon(
-                                    Icons.history,
-                                    color: AppColors.white,
-                                  ),
-                                  onPressed: _showHistoryDrawer,
-                                  tooltip: AppStrings.recentConnections,
-                                ),
-                              ),
-                              const SizedBox(height: 32),
-                              AppInputTile(
-                                icon: Icons.security,
-                                label: AppStrings.authentication,
-                                value: _selectedAuthType.displayName,
-                                onTap: _showAuthDrawer,
-                                borderColor: Colors.white,
-                                labelColor: Colors.white,
-                              ),
-                              const SizedBox(height: 32),
-                              AppInputTile(
-                                icon: Icons.settings,
-                                label: AppStrings.advancedOptions,
-                                value: advancedSummary,
-                                onTap: _showAdvancedDrawer,
-                                borderColor: Colors.white,
-                                labelColor: Colors.white,
-                              ),
-                            ],
+                      const SizedBox(height: 16),
+                      FadeTransition(
+                        opacity: _taglineController,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            AppLocalizations.of(context)!.appTagline,
+                            textAlign: TextAlign.center,
+                            style: AppTextStyles.body.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.5,
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 24),
+                      if (authProvider.error != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 24.0),
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.red.withValues(alpha: 0.3),
+                              ),
+                            ),
+                            child: Text(
+                              authProvider.error!.localizedMessage(AppLocalizations.of(context)!),
+                              style: AppTextStyles.errorMessage.copyWith(
+                                color: Colors.redAccent,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                      Form(
+                        key: _formKey,
+                        child: Column(
+                          children: [
+                            AppInputField(
+                              controller: _uriController,
+                              labelText: AppLocalizations.of(context)!.dockerHostUri,
+                              validator: (v) => Validators.validateUri(
+                                v,
+                                requiredError: AppLocalizations.of(context)!.uriRequired,
+                                invalidError: AppLocalizations.of(context)!.invalidIpPort,
+                              ),
+                              prefixIcon: Icons.dns_outlined,
+                              suffixIcon: IconButton(
+                                icon: const Icon(
+                                  Icons.history,
+                                  color: AppColors.white,
+                                ),
+                                onPressed: _showHistoryDrawer,
+                                tooltip: AppLocalizations.of(context)!.recentConnections,
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+                            AppInputTile(
+                              icon: Icons.security,
+                              label: AppLocalizations.of(context)!.authentication,
+                              value: _selectedAuthType.getDisplayName(AppLocalizations.of(context)!),
+                              onTap: _showAuthDrawer,
+                              borderColor: Colors.white,
+                              labelColor: Colors.white,
+                            ),
+                            const SizedBox(height: 32),
+                            AppInputTile(
+                              icon: Icons.settings,
+                              label: AppLocalizations.of(context)!.advancedOptions,
+                              value: advancedSummary,
+                              onTap: _showAdvancedDrawer,
+                              borderColor: Colors.white,
+                              labelColor: Colors.white,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
             bottomNavigationBar: SafeArea(
@@ -406,8 +350,8 @@ class _ConnectionScreenState extends State<ConnectionScreen>
                           : () => _connect(),
                       child: Text(
                         authProvider.isConnecting
-                            ? AppStrings.connecting
-                            : AppStrings.connect,
+                            ? AppLocalizations.of(context)!.connecting
+                            : AppLocalizations.of(context)!.connect,
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,

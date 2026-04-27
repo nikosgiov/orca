@@ -1,4 +1,5 @@
 import 'package:docker_controller/core/di/service_locator.dart';
+import 'package:docker_controller/core/utils/result.dart';
 import 'package:docker_controller/models/log_level.dart';
 import 'package:docker_controller/providers/logs_notifications_provider.dart';
 import 'package:docker_controller/services/container_service.dart';
@@ -8,6 +9,7 @@ import 'package:mockito/mockito.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../mocks.mocks.dart';
+import '../test_helpers.dart';
 
 void main() {
   late LogsNotificationsProvider provider;
@@ -16,13 +18,14 @@ void main() {
   late MockContainerService mockContainerService;
 
   setUp(() async {
+    registerTestDummies();
     SharedPreferences.setMockInitialValues({});
     
     mockAuthProvider = MockAuthProvider();
     mockNotificationService = MockNotificationService();
     mockContainerService = MockContainerService();
 
-    getIt.reset();
+    await getIt.reset();
     getIt.registerSingleton<NotificationService>(mockNotificationService);
     getIt.registerSingleton<ContainerService>(mockContainerService);
 
@@ -45,15 +48,10 @@ void main() {
       
       const mockLogs = 'line 1\nERROR: something failed\nWARN: careful';
       when(mockContainerService.getContainerLogs(any))
-          .thenAnswer((_) async => mockLogs);
+          .thenAnswer((_) async => Result.success(mockLogs));
 
       // We need a config to satisfy the check
       when(mockAuthProvider.connectionConfig).thenReturn(null); 
-      // Wait, the provider check is:
-      // final config = authProvider.connectionConfig;
-      // if (config == null) return;
-      
-      // I need to mock AuthProvider properly
     });
   });
 }

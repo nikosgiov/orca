@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+
 import '../../../constants/app_colors.dart';
 import '../../../constants/app_paddings.dart';
-import '../../../constants/app_strings.dart';
 import '../../../constants/app_text_styles.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../providers/logs_notifications_provider.dart';
 import '../../../widgets/app_button.dart';
 import 'notification_item.dart';
@@ -27,13 +28,13 @@ class NotificationsTab extends StatelessWidget {
           ),
           child: Row(
             children: [
-              const Text(
-                AppStrings.notificationsTab,
+              Text(
+                AppLocalizations.of(context)!.notificationsTab,
                 style: AppTextStyles.heading2,
               ),
               const Spacer(),
               AppButton(
-                label: AppStrings.markAllRead,
+                label: AppLocalizations.of(context)!.markAllRead,
                 onPressed: () => _markAllAsRead(context, provider),
                 color: AppColors.primary,
                 textColor: AppColors.white,
@@ -67,8 +68,8 @@ class NotificationsTab extends StatelessWidget {
   ) {
     provider.markAllAsRead();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('All notifications marked as read'),
+      SnackBar(
+        content: Text(AppLocalizations.of(context)!.allNotificationsMarkedRead),
         backgroundColor: AppColors.primary,
       ),
     );

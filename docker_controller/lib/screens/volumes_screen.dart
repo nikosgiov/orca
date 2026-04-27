@@ -1,17 +1,18 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_gradients.dart';
+import 'package:docker_controller/constants/app_paddings.dart';
+import 'package:docker_controller/constants/app_text_styles.dart';
+import 'package:docker_controller/models/app_state.dart';
+import 'package:docker_controller/models/docker_volume.dart';
+import 'package:docker_controller/providers/auth_provider.dart';
+import 'package:docker_controller/providers/volumes_networks_provider.dart';
+import 'package:docker_controller/widgets/app_gradient_top_bar.dart';
+import 'package:docker_controller/widgets/info_row.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../constants/app_colors.dart';
-import '../constants/app_gradients.dart';
-import '../constants/app_paddings.dart';
-import '../constants/app_strings.dart';
-import '../constants/app_text_styles.dart';
-import '../models/docker_volume.dart';
-import '../providers/auth_provider.dart';
-import '../providers/volumes_networks_provider.dart';
-import '../widgets/app_gradient_top_bar.dart';
-import '../widgets/info_row.dart';
+import '../l10n/app_localizations.dart';
 
 /// ─── Volumes Screen ──────────────────────────────────────────────────────────
 class VolumesScreen extends StatelessWidget {
@@ -56,7 +57,7 @@ class _VolumesScreenBodyState extends State<_VolumesScreenBody> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppGradientTopBar(
-          title: 'Volumes',
+          title: AppLocalizations.of(context)!.volumesTitle,
           leftWidget: IconButton(
             onPressed: () => context.pop(),
             icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
@@ -71,37 +72,55 @@ class _VolumesScreenBodyState extends State<_VolumesScreenBody> {
           onRefresh: () async => provider.refreshData(),
           color: AppColors.primary,
           backgroundColor: const Color(0xFF1A0B3B),
-          child: provider.isLoadingVolumes
-              ? const Center(
-                  child: CircularProgressIndicator(color: AppColors.primary),
-                )
-              : provider.volumes.isEmpty
-              ? const CustomScrollView(
-                  physics: AlwaysScrollableScrollPhysics(),
-                  slivers: [
-                    SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: Center(
-                        child: Text(
-                          'No volumes found',
-                          style: AppTextStyles.caption,
+          child: switch (provider.volumesState) {
+            AppInitial() || AppLoading() => const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              ),
+            AppStateError(:final failure) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, color: AppColors.error, size: 48),
+                      const SizedBox(height: 16),
+                      Text(failure.localizedMessage(AppLocalizations.of(context)!), style: AppTextStyles.body, textAlign: TextAlign.center),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => provider.refreshData(),
+                        child: Text(AppLocalizations.of(context)!.retry),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            AppSuccess(data: final volumes) => volumes.isEmpty
+                ? CustomScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    slivers: [
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: Center(
+                          child: Text(
+                            AppLocalizations.of(context)!.noVolumesFound,
+                            style: AppTextStyles.caption,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
-                  itemCount: provider.volumes.length,
-                  itemBuilder: (context, index) {
-                    final volume = provider.volumes[index];
-                    return _VolumeCard(
-                      volume: volume,
-                      provider: provider,
-                      context: context,
-                    );
-                  },
-                ),
+                    ],
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+                    itemCount: volumes.length,
+                    itemBuilder: (context, index) {
+                      final volume = volumes[index];
+                      return _VolumeCard(
+                        volume: volume,
+                        provider: provider,
+                      );
+                    },
+                  ),
+          },
         ),
       ),
     );
@@ -112,18 +131,16 @@ class _VolumeCard extends StatelessWidget {
   const _VolumeCard({
     required this.volume,
     required this.provider,
-    required this.context,
   });
   final DockerVolume volume;
   final VolumesNetworksProvider provider;
-  final BuildContext context;
 
   @override
   Widget build(BuildContext ctx) {
     final name = volume.name;
     final driver = volume.driver;
     final mountpoint = volume.mountpoint;
-    final createdAt = volume.createdAt ?? 'Unknown';
+    final createdAt = volume.createdAt ?? AppLocalizations.of(ctx)!.unknown;
     final scope = volume.scope;
 
     return Container(
@@ -161,7 +178,7 @@ class _VolumeCard extends StatelessWidget {
                       style: AppTextStyles.heading2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    Text('Driver: $driver', style: AppTextStyles.caption),
+                    Text('${AppLocalizations.of(ctx)!.labelDriver}: $driver', style: AppTextStyles.caption),
                   ],
                 ),
               ),
@@ -169,17 +186,17 @@ class _VolumeCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           InfoRow(
-            label: AppStrings.labelMountPoint,
+            label: AppLocalizations.of(ctx)!.labelMountPoint,
             value: mountpoint,
             icon: Icons.folder_outlined,
           ),
           InfoRow(
-            label: 'Created',
+            label: AppLocalizations.of(ctx)!.labelCreated,
             value: createdAt,
             icon: Icons.schedule_outlined,
           ),
           InfoRow(
-            label: 'Scope',
+            label: AppLocalizations.of(ctx)!.labelScope,
             value: scope,
             icon: Icons.visibility_outlined,
           ),
@@ -188,7 +205,7 @@ class _VolumeCard extends StatelessWidget {
             children: [
               Expanded(
                 child: _PillBtn(
-                  label: 'INSPECT',
+                  label: AppLocalizations.of(ctx)!.actionInspect.toUpperCase(),
                   color: AppColors.primary,
                   onPressed: () =>
                       _inspect(ctx, name, driver, mountpoint, createdAt, scope),
@@ -197,7 +214,7 @@ class _VolumeCard extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: _PillBtn(
-                  label: 'REMOVE',
+                  label: AppLocalizations.of(ctx)!.actionRemove.toUpperCase(),
                   color: AppColors.error,
                   onPressed: () => _remove(ctx, name),
                 ),
@@ -217,10 +234,11 @@ class _VolumeCard extends StatelessWidget {
     String createdAt,
     String scope,
   ) {
+    final l10n = AppLocalizations.of(ctx)!;
     showDialog(
       context: ctx,
       builder: (_) => AlertDialog(
-        title: Text('Volume: $name'),
+        title: Text('${l10n.volume}: $name'),
         content: SizedBox(
           width: double.maxFinite,
           child: SingleChildScrollView(
@@ -228,11 +246,11 @@ class _VolumeCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _InspectRow(label: 'Name', value: name),
-                _InspectRow(label: 'Driver', value: driver),
-                _InspectRow(label: 'Mount Point', value: mountpoint),
-                _InspectRow(label: 'Created', value: createdAt),
-                _InspectRow(label: 'Scope', value: scope),
+                _InspectRow(label: l10n.name, value: name),
+                _InspectRow(label: l10n.labelDriver, value: driver),
+                _InspectRow(label: l10n.labelMountPoint, value: mountpoint),
+                _InspectRow(label: l10n.labelCreated, value: createdAt),
+                _InspectRow(label: l10n.labelScope, value: scope),
               ],
             ),
           ),
@@ -240,7 +258,7 @@ class _VolumeCard extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Close'),
+            child: Text(l10n.close),
           ),
         ],
       ),
@@ -248,15 +266,16 @@ class _VolumeCard extends StatelessWidget {
   }
 
   void _remove(BuildContext ctx, String name) {
+    final l10n = AppLocalizations.of(ctx)!;
     showDialog(
       context: ctx,
       builder: (dCtx) => AlertDialog(
-        title: const Text('Remove Volume'),
-        content: Text('Remove volume "$name"?'),
+        title: Text(l10n.actionRemove),
+        content: Text(l10n.removeVolumeConfirm(name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dCtx),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () async {
@@ -268,7 +287,7 @@ class _VolumeCard extends StatelessWidget {
               ScaffoldMessenger.of(ctx).showSnackBar(
                 SnackBar(
                   content: Text(
-                    ok ? 'Removed $name' : 'Failed to remove $name',
+                    ok ? l10n.removedVolume(name) : l10n.failedToRemoveVolume(name),
                   ),
                   backgroundColor: ok
                       ? AppColors.success
@@ -277,7 +296,7 @@ class _VolumeCard extends StatelessWidget {
               );
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Remove'),
+            child: Text(l10n.actionRemove),
           ),
         ],
       ),

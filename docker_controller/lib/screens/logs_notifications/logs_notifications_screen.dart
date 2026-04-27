@@ -1,11 +1,11 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/providers/logs_notifications_provider.dart';
+import 'package:docker_controller/widgets/app_background.dart';
+import 'package:docker_controller/widgets/app_gradient_top_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../constants/app_colors.dart';
-import '../../constants/app_strings.dart';
-import '../../providers/logs_notifications_provider.dart';
-import '../../widgets/app_background.dart';
-import '../../widgets/app_gradient_top_bar.dart';
+import '../../l10n/app_localizations.dart';
 import 'widgets/logs_tab.dart';
 import 'widgets/notifications_tab.dart';
 
@@ -33,7 +33,7 @@ class _LogsNotificationsScreenBody extends StatelessWidget {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppGradientTopBar(
-          title: AppStrings.logsNotificationsTitle,
+          title: AppLocalizations.of(context)!.logsNotificationsTitle,
           leftWidget: IconButton(
             onPressed: () => Navigator.pop(context),
             icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
@@ -75,14 +75,14 @@ class _LogsNotificationsScreenBody extends StatelessWidget {
                     fontSize: 10,
                     fontWeight: FontWeight.w400,
                   ),
-                  tabs: const [
+                  tabs: [
                     Tab(
-                      icon: Icon(Icons.description_outlined, size: 16),
-                      text: AppStrings.logsTab,
+                      icon: const Icon(Icons.description_outlined, size: 16),
+                      text: AppLocalizations.of(context)!.logsTab,
                     ),
                     Tab(
-                      icon: Icon(Icons.notifications_outlined, size: 16),
-                      text: AppStrings.notificationsTab,
+                      icon: const Icon(Icons.notifications_outlined, size: 16),
+                      text: AppLocalizations.of(context)!.notificationsTab,
                     ),
                   ],
                 ),

@@ -1,7 +1,7 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_text_styles.dart';
 import 'package:flutter/material.dart';
 
-import '../constants/app_colors.dart';
-import '../constants/app_text_styles.dart';
 import 'app_card.dart';
 
 class AppStatCard extends StatelessWidget {

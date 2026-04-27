@@ -1,5 +1,9 @@
 import 'package:docker_controller/core/di/service_locator.dart';
+import 'package:docker_controller/core/utils/result.dart';
+import 'package:docker_controller/models/app_error.dart';
 import 'package:docker_controller/models/app_state.dart';
+import 'package:docker_controller/models/docker_container.dart';
+import 'package:docker_controller/models/docker_image.dart';
 import 'package:docker_controller/models/resource_metrics.dart';
 import 'package:docker_controller/providers/resource_monitoring_provider.dart';
 import 'package:docker_controller/services/container_service.dart';
@@ -9,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 
 import '../mocks.mocks.dart';
+import '../test_helpers.dart';
 
 void main() {
   late ResourceMonitoringProvider provider;
@@ -17,6 +22,7 @@ void main() {
   late MockImageService mockImageService;
 
   setUp(() {
+    registerTestDummies();
     mockSystemService = MockSystemService();
     mockContainerService = MockContainerService();
     mockImageService = MockImageService();
@@ -51,10 +57,10 @@ void main() {
       };
 
       when(mockSystemService.getSystemMetrics(any))
-          .thenAnswer((_) async => mockData);
-      when(mockSystemService.getSystemInfo()).thenAnswer((_) async => {});
-      when(mockContainerService.getContainers()).thenAnswer((_) async => []);
-      when(mockImageService.getImages()).thenAnswer((_) async => []);
+          .thenAnswer((_) async => Result.success(mockData));
+      when(mockSystemService.getSystemInfo()).thenAnswer((_) async => Result.success(<String, dynamic>{}));
+      when(mockContainerService.getContainers()).thenAnswer((_) async => Result.success(<DockerContainer>[]));
+      when(mockImageService.getImages()).thenAnswer((_) async => Result.success(<DockerImage>[]));
 
       await provider.fetchData();
 
@@ -63,18 +69,18 @@ void main() {
       expect(successState.data.rawMetrics['cpu'], contains(10.0));
     });
 
-    test('fetchData sets state to AppError on failure', () async {
+    test('fetchData sets state to AppStateError on failure', () async {
       when(mockSystemService.getSystemMetrics(any))
-          .thenThrow(Exception('API Error'));
-      when(mockSystemService.getSystemInfo()).thenAnswer((_) async => {});
-      when(mockContainerService.getContainers()).thenAnswer((_) async => []);
-      when(mockImageService.getImages()).thenAnswer((_) async => []);
+          .thenAnswer((_) async => Result.failure(AppError(message: 'API Error')));
+      when(mockSystemService.getSystemInfo()).thenAnswer((_) async => Result.success(<String, dynamic>{}));
+      when(mockContainerService.getContainers()).thenAnswer((_) async => Result.success(<DockerContainer>[]));
+      when(mockImageService.getImages()).thenAnswer((_) async => Result.success(<DockerImage>[]));
 
       await provider.fetchData();
 
-      expect(provider.state, isA<AppError>());
-      final errorState = provider.state as AppError;
-      expect(errorState.message, contains('API Error'));
+      expect(provider.state, isA<AppStateError>());
+      final errorState = provider.state as AppStateError;
+      expect(errorState.failure.message, contains('API Error'));
     });
   });
 }

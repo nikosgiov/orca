@@ -1,3 +1,5 @@
+import 'app_error.dart';
+
 sealed class AppState<T> {
   const AppState();
 }
@@ -16,12 +18,10 @@ final class AppSuccess<T> extends AppState<T> {
   final T data;
 }
 
-final class AppError<T> extends AppState<T> {
-  const AppError({required this.message, this.error, this.stackTrace});
-  final String message;
-  final Object? error;
-  final StackTrace? stackTrace;
+final class AppStateError<T> extends AppState<T> {
+  const AppStateError(this.failure);
+  final AppError failure;
 
   @override
-  String toString() => 'AppError(message: $message, error: $error)';
+  String toString() => 'AppStateError(failure: $failure)';
 }

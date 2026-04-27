@@ -1,13 +1,13 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_text_styles.dart';
+import 'package:docker_controller/models/app_state.dart';
+import 'package:docker_controller/providers/compose_provider.dart';
+import 'package:docker_controller/widgets/app_background.dart';
+import 'package:docker_controller/widgets/app_gradient_top_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../constants/app_colors.dart';
-import '../../constants/app_strings.dart';
-import '../../constants/app_text_styles.dart';
-import '../../models/app_state.dart';
-import '../../providers/compose_provider.dart';
-import '../../widgets/app_background.dart';
-import '../../widgets/app_gradient_top_bar.dart';
+import '../../l10n/app_localizations.dart';
 import 'widgets/project_card.dart';
 
 class ComposeScreen extends StatefulWidget {
@@ -40,7 +40,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
       scale: 1.5,
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: const AppGradientTopBar(title: AppStrings.composeTitle),
+        appBar: AppGradientTopBar(title: AppLocalizations.of(context)!.composeTitle),
         body: switch (provider.state) {
           AppInitial() => const SizedBox.shrink(),
           AppLoading(:final message) => Center(
@@ -67,19 +67,19 @@ class _ComposeScreenState extends State<ComposeScreen> {
                           size: 48,
                         ),
                         const SizedBox(height: 16),
-                        const Text(
-                          'No Compose Projects Found',
+                        Text(
+                          AppLocalizations.of(context)!.noProjectsFound,
                           style: AppTextStyles.heading2,
                         ),
                         const SizedBox(height: 8),
-                        const Text(
-                          'Ensure labels com.docker.compose.project exist on containers.',
+                        Text(
+                          AppLocalizations.of(context)!.composeLabelHint,
                           style: AppTextStyles.caption,
                         ),
                         const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: provider.loadProjects,
-                          child: const Text('Refresh'),
+                          child: Text(AppLocalizations.of(context)!.refresh),
                         ),
                       ],
                     ),
@@ -102,7 +102,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
                       },
                     ),
                   ),
-          AppError(:final message) => Center(
+          AppStateError(:final failure) => Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -113,14 +113,14 @@ class _ComposeScreenState extends State<ComposeScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  message,
+                  failure.message,
                   style: AppTextStyles.body,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: provider.loadProjects,
-                  child: const Text('Retry'),
+                  child: Text(AppLocalizations.of(context)!.retry),
                 ),
               ],
             ),

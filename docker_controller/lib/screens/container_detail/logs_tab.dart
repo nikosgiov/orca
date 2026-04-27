@@ -1,10 +1,10 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_text_styles.dart';
+import 'package:docker_controller/providers/container_detail_provider.dart';
+import 'package:docker_controller/widgets/app_search_bar.dart';
 import 'package:flutter/material.dart';
 
-import '../../constants/app_colors.dart';
-import '../../constants/app_strings.dart';
-import '../../constants/app_text_styles.dart';
-import '../../providers/container_detail_provider.dart';
-import '../../widgets/app_search_bar.dart';
+import '../../l10n/app_localizations.dart';
 
 class LogsTab extends StatelessWidget {
   const LogsTab({super.key, required this.provider});
@@ -47,13 +47,13 @@ class _LogControls extends StatelessWidget {
               Expanded(
                 child: AppSearchBar(
                   value: provider.logSearch,
-                  hintText: 'Search logs...',
+                  hintText: AppLocalizations.of(context)!.searchLogsHint,
                   onChanged: provider.setLogSearch,
                 ),
               ),
               const SizedBox(width: 8),
               _GlassPillButton(
-                label: AppStrings.refresh,
+                label: AppLocalizations.of(context)!.refresh,
                 icon: Icons.refresh,
                 color: AppColors.primary,
                 onPressed: hasLogs ? provider.loadContainerData : null,
@@ -65,21 +65,21 @@ class _LogControls extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _buildTimeChip('15m', '15m'),
+                _buildTimeChip('15m', (900).toString()), // 15 * 60
                 const SizedBox(width: 6),
-                _buildTimeChip('1h', '1h'),
+                _buildTimeChip('1h', (3600).toString()), // 60 * 60
                 const SizedBox(width: 6),
-                _buildTimeChip('24h', '24h'),
+                _buildTimeChip('24h', (86400).toString()), // 24 * 60 * 60
                 const SizedBox(width: 6),
-                _buildTimeChip('All Time', null),
+                _buildTimeChip(AppLocalizations.of(context)!.timeAllTime, null),
 
                 const SizedBox(width: 16),
                 Container(width: 1, height: 20, color: AppColors.glassBorder),
                 const SizedBox(width: 16),
 
-                const Text('Lines:', style: AppTextStyles.caption),
+                Text(AppLocalizations.of(context)!.lines, style: AppTextStyles.caption),
                 const SizedBox(width: 8),
-                _buildTailDropdown(),
+                _buildTailDropdown(context),
               ],
             ),
           ),
@@ -117,7 +117,7 @@ class _LogControls extends StatelessWidget {
     );
   }
 
-  Widget _buildTailDropdown() {
+  Widget _buildTailDropdown(BuildContext context) {
     return Container(
       height: 28,
       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -142,11 +142,11 @@ class _LogControls extends StatelessWidget {
               provider.setLogTail(newValue);
             }
           },
-          items: const [
-            DropdownMenuItem(value: 100, child: Text('100')),
-            DropdownMenuItem(value: 500, child: Text('500')),
-            DropdownMenuItem(value: 1000, child: Text('1000')),
-            DropdownMenuItem(value: 0, child: Text('All')),
+          items: [
+            const DropdownMenuItem(value: 100, child: Text('100')),
+            const DropdownMenuItem(value: 500, child: Text('500')),
+            const DropdownMenuItem(value: 1000, child: Text('1000')),
+            DropdownMenuItem(value: 0, child: Text(AppLocalizations.of(context)!.logLevelAll)),
           ],
         ),
       ),
@@ -227,9 +227,9 @@ class _LogDisplay extends StatelessWidget {
         border: Border.all(color: AppColors.glassBorder),
       ),
       child: logs == null || logs!.isEmpty
-          ? const Center(
+          ? Center(
               child: Text(
-                AppStrings.noLogsAvailable,
+                AppLocalizations.of(context)!.noLogsAvailable,
                 style: AppTextStyles.caption,
               ),
             )

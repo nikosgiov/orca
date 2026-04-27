@@ -1,19 +1,19 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/models/app_state.dart';
+import 'package:docker_controller/providers/auth_provider.dart';
+import 'package:docker_controller/providers/containers_provider.dart';
+import 'package:docker_controller/widgets/app_background.dart';
+import 'package:docker_controller/widgets/app_empty_state.dart';
+import 'package:docker_controller/widgets/app_filter_chips.dart';
+import 'package:docker_controller/widgets/app_gradient_top_bar.dart';
+import 'package:docker_controller/widgets/app_loading_indicator.dart';
+import 'package:docker_controller/widgets/app_search_bar.dart';
+import 'package:docker_controller/widgets/container_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../constants/app_colors.dart';
-import '../constants/app_strings.dart';
-import '../models/app_state.dart';
-import '../providers/auth_provider.dart';
-import '../providers/containers_provider.dart';
-import '../widgets/app_background.dart';
-import '../widgets/app_empty_state.dart';
-import '../widgets/app_filter_chips.dart';
-import '../widgets/app_gradient_top_bar.dart';
-import '../widgets/app_loading_indicator.dart';
-import '../widgets/app_search_bar.dart';
-import '../widgets/container_card.dart';
+import '../l10n/app_localizations.dart';
 
 class ContainersScreen extends StatefulWidget {
   const ContainersScreen({super.key});
@@ -50,7 +50,7 @@ class _ContainersScreenState extends State<ContainersScreen> {
       scale: 1.5,
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: const AppGradientTopBar(title: AppStrings.containersTitle),
+        appBar: AppGradientTopBar(title: AppLocalizations.of(context)!.containersTitle),
         floatingActionButton: _AddContainerButton(
           authProvider: authProvider,
           containersProvider: containersProvider,
@@ -70,18 +70,18 @@ class _ContainersScreenState extends State<ContainersScreen> {
   Widget _buildContent(ContainersProvider provider) {
     return switch (provider.state) {
       AppInitial() => const SizedBox.shrink(),
-      AppLoading() => const AppLoadingIndicator(message: 'Loading containers...'),
+      AppLoading() => AppLoadingIndicator(message: AppLocalizations.of(context)!.loadingContainers),
       AppSuccess(:final data) => data.isEmpty
-          ? const AppEmptyState(
+          ? AppEmptyState(
               icon: Icons.inbox_outlined,
-              title: AppStrings.noContainersFound,
-              message: AppStrings.createFirstContainer,
+              title: AppLocalizations.of(context)!.noContainersFound,
+              message: AppLocalizations.of(context)!.createFirstContainer,
             )
           : _ContainersList(provider: provider),
-      AppError(:final message) => AppEmptyState(
+      AppStateError(:final failure) => AppEmptyState(
           icon: Icons.error_outline,
-          title: 'Error',
-          message: message,
+          title: AppLocalizations.of(context)!.error,
+          message: failure.localizedMessage(AppLocalizations.of(context)!),
         ),
     };
   }
@@ -121,7 +121,7 @@ class _SearchAndFilterHeader extends StatelessWidget {
           AppSearchBar(
             value: provider.searchQuery,
             onChanged: (v) => provider.searchQuery = v,
-            hintText: AppStrings.searchContainersHint,
+            hintText: AppLocalizations.of(context)!.searchContainersHint,
           ),
           const SizedBox(height: 10),
           AppFilterChips(

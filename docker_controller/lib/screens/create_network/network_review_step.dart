@@ -1,6 +1,6 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/providers/create_network_provider.dart';
 import 'package:flutter/material.dart';
-import '../../constants/app_colors.dart';
-import '../../providers/create_network_provider.dart';
 
 class NetworkReviewStep extends StatelessWidget {
   const NetworkReviewStep({super.key, required this.provider});

@@ -1,16 +1,15 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/models/app_state.dart';
+import 'package:docker_controller/providers/images_provider.dart';
+import 'package:docker_controller/widgets/app_background.dart';
+import 'package:docker_controller/widgets/app_empty_state.dart';
+import 'package:docker_controller/widgets/app_gradient_top_bar.dart';
+import 'package:docker_controller/widgets/app_loading_indicator.dart';
+import 'package:docker_controller/widgets/app_search_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../constants/app_colors.dart';
-import '../../constants/app_strings.dart';
-import '../../constants/app_text_styles.dart';
-import '../../models/app_state.dart';
-import '../../providers/images_provider.dart';
-import '../../widgets/app_background.dart';
-import '../../widgets/app_empty_state.dart';
-import '../../widgets/app_gradient_top_bar.dart';
-import '../../widgets/app_loading_indicator.dart';
-import '../../widgets/app_search_bar.dart';
+import '../../l10n/app_localizations.dart';
 import 'widgets/image_card.dart';
 import 'widgets/pull_image_dialog.dart';
 
@@ -47,7 +46,7 @@ class _ImagesScreenState extends State<ImagesScreen> {
       scale: 1.6,
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: const AppGradientTopBar(title: AppStrings.imagesTitle),
+        appBar: AppGradientTopBar(title: AppLocalizations.of(context)!.imagesTitle),
         body: Column(
           children: [
             Padding(
@@ -55,21 +54,21 @@ class _ImagesScreenState extends State<ImagesScreen> {
               child: AppSearchBar(
                 value: imagesProvider.searchQuery,
                 onChanged: (value) => imagesProvider.searchQuery = value,
-                hintText: AppStrings.searchImagesHint,
+                hintText: AppLocalizations.of(context)!.searchImagesHint,
               ),
             ),
             Expanded(
               child: switch (imagesProvider.state) {
                 AppInitial() => const SizedBox.shrink(),
-                AppLoading() => const AppLoadingIndicator(
-                  message: 'Loading images...',
+                AppLoading() => AppLoadingIndicator(
+                  message: AppLocalizations.of(context)!.loadingImagesProgress,
                 ),
                 AppSuccess(:final data) =>
                   data.isEmpty
-                      ? const AppEmptyState(
+                      ? AppEmptyState(
                           icon: Icons.image_not_supported_outlined,
-                          title: AppStrings.noImagesFound,
-                          message: AppStrings.pullFirstImage,
+                          title: AppLocalizations.of(context)!.noImagesFound,
+                          message: AppLocalizations.of(context)!.pullFirstImage,
                         )
                       : RefreshIndicator(
                           onRefresh: imagesProvider.refreshImages,
@@ -85,10 +84,10 @@ class _ImagesScreenState extends State<ImagesScreen> {
                             },
                           ),
                         ),
-                AppError(:final message) => AppEmptyState(
+                AppStateError(:final failure) => AppEmptyState(
                   icon: Icons.error_outline,
-                  title: 'Error',
-                  message: message,
+                  title: AppLocalizations.of(context)!.error,
+                  message: failure.localizedMessage(AppLocalizations.of(context)!),
                 ),
               },
             ),
