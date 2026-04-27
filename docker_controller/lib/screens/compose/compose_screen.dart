@@ -3,7 +3,6 @@ import 'package:docker_controller/constants/app_text_styles.dart';
 import 'package:docker_controller/models/app_state.dart';
 import 'package:docker_controller/providers/compose_provider.dart';
 import 'package:docker_controller/widgets/app_background.dart';
-import 'package:docker_controller/widgets/app_gradient_top_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -40,7 +39,6 @@ class _ComposeScreenState extends State<ComposeScreen> {
       scale: 1.5,
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppGradientTopBar(title: AppLocalizations.of(context)!.composeTitle),
         body: switch (provider.state) {
           AppInitial() => const SizedBox.shrink(),
           AppLoading(:final message) => Center(

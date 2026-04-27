@@ -5,7 +5,6 @@ import 'package:docker_controller/providers/containers_provider.dart';
 import 'package:docker_controller/widgets/app_background.dart';
 import 'package:docker_controller/widgets/app_empty_state.dart';
 import 'package:docker_controller/widgets/app_filter_chips.dart';
-import 'package:docker_controller/widgets/app_gradient_top_bar.dart';
 import 'package:docker_controller/widgets/app_loading_indicator.dart';
 import 'package:docker_controller/widgets/app_search_bar.dart';
 import 'package:docker_controller/widgets/container_card.dart';
@@ -50,7 +49,6 @@ class _ContainersScreenState extends State<ContainersScreen> {
       scale: 1.5,
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppGradientTopBar(title: AppLocalizations.of(context)!.containersTitle),
         floatingActionButton: _AddContainerButton(
           authProvider: authProvider,
           containersProvider: containersProvider,

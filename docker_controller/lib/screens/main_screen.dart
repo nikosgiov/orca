@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 
 import 'package:docker_controller/constants/app_colors.dart';
 import 'package:docker_controller/constants/app_gradients.dart';
+import 'package:docker_controller/widgets/app_gradient_top_bar.dart';
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
@@ -62,6 +63,9 @@ class _MainScreenState extends State<MainScreen>
       child: Scaffold(
         backgroundColor: Colors.transparent,
         extendBody: true,
+        appBar: AppGradientTopBar(
+          title: _getTitle(context),
+        ),
         body: FadeTransition(
           opacity: _fadeAnimation,
           child: widget.child,
@@ -72,6 +76,26 @@ class _MainScreenState extends State<MainScreen>
         ),
       ),
     );
+  }
+
+  String _getTitle(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (widget.currentIndex) {
+      case 0:
+        return l10n.dashboardTitle;
+      case 1:
+        return l10n.containersTitle;
+      case 2:
+        return l10n.imagesTitle;
+      case 3:
+        return l10n.resourceMonitoringTitle;
+      case 4:
+        return l10n.composeTitle;
+      case 5:
+        return l10n.settingsTitle;
+      default:
+        return '';
+    }
   }
 }
 

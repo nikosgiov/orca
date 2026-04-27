@@ -8,7 +8,6 @@ import 'package:docker_controller/providers/settings_provider.dart';
 import 'package:docker_controller/providers/system_stats_provider.dart';
 import 'package:docker_controller/widgets/app_background.dart';
 import 'package:docker_controller/widgets/app_button.dart';
-import 'package:docker_controller/widgets/app_gradient_top_bar.dart';
 import 'package:docker_controller/widgets/home/container_status_card.dart';
 import 'package:docker_controller/widgets/home/home_widgets.dart';
 import 'package:docker_controller/widgets/home/infrastructure_card.dart';
@@ -102,7 +101,6 @@ class _HomeScreenState extends State<HomeScreen>
       scale: 1.5,
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppGradientTopBar(title: AppLocalizations.of(context)!.dashboardTitle),
         body: Consumer2<AuthProvider, SystemStatsProvider>(
           builder: (context, auth, stats, child) {
             if (!auth.isConnected) {
