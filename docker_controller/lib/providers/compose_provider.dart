@@ -1,160 +1,180 @@
 import 'dart:convert';
+
+import 'package:docker_controller/core/di/service_locator.dart';
+import 'package:docker_controller/models/app_state.dart';
+import 'package:docker_controller/models/compose_project.dart';
+import 'package:docker_controller/providers/auth_provider.dart';
+import 'package:docker_controller/services/compose_service.dart';
 import 'package:flutter/material.dart';
-import '../models/compose_project.dart';
-import '../providers/app_provider.dart';
-import '../services/compose_service.dart';
 
+/// Provider responsible for managing Docker Compose projects and their lifecycle.
 class ComposeProvider extends ChangeNotifier {
-  final AppProvider appProvider;
-  
-  bool isLoading = false;
-  String? error;
-  List<ComposeProject> projects = [];
+  ComposeProvider({required this.authProvider, ComposeService? composeService})
+    : _composeService = composeService ?? getIt<ComposeService>();
+  final AuthProvider authProvider;
+  final ComposeService _composeService;
 
+  AppState<List<ComposeProject>> _state = const AppInitial();
   // Per-project streaming output state
   final Map<String, List<String>> _projectLogs = {};
   final Map<String, bool> _projectIsRunning = {};
 
-  ComposeProvider({required this.appProvider});
+  /// Returns the current state of the compose projects list.
+  AppState<List<ComposeProject>> get state => _state;
 
-  List<String> getLogsForProject(String projectName) => _projectLogs[projectName] ?? [];
-  bool isProjectCommandRunning(String projectName) => _projectIsRunning[projectName] ?? false;
+  /// Returns the streaming log output for a specific project.
+  List<String> getLogsForProject(String projectName) =>
+      _projectLogs[projectName] ?? [];
 
-  Future<void> loadProjects() async {
-    final config = appProvider.connectionConfig;
-    if (config == null) {
-      error = 'Not connected';
-      notifyListeners();
+  /// Returns whether a compose command is currently running for a specific project.
+  bool isProjectCommandRunning(String projectName) =>
+      _projectIsRunning[projectName] ?? false;
+
+  /// Whether the provider is currently loading the project list.
+  bool get isLoading => _state is AppLoading;
+
+  /// Returns the list of compose projects if the state is success.
+  List<ComposeProject> get projects {
+    if (_state is AppSuccess<List<ComposeProject>>) {
+      return (_state as AppSuccess<List<ComposeProject>>).data;
+    }
+    return [];
+  }
+
+  /// Fetches the list of compose projects from the Docker daemon.
+  ///
+  /// If [silent] is true, the state remains unchanged (no loading spinner).
+  Future<void> loadProjects({bool silent = false}) async {
+    if (!authProvider.isConnected) {
       return;
     }
 
-    isLoading = true;
-    error = null;
-    notifyListeners();
-
-    try {
-      final res = await ComposeService.getProjects(config);
-      if (res != null) {
-        projects = res;
-        // Sort alphabetically
-        projects.sort((a, b) => a.name.compareTo(b.name));
-      } else {
-        error = 'Failed to load Compose projects. Check server connection.';
-      }
-    } catch (e) {
-      error = 'Error loading projects: $e';
-    } finally {
-      isLoading = false;
+    if (!silent) {
+      _state = const AppLoading();
       notifyListeners();
     }
+
+    final result = await _composeService.getProjects();
+    result.fold(
+      (projectsList) {
+        projectsList.sort((a, b) => a.name.compareTo(b.name));
+        _state = AppSuccess(projectsList);
+      },
+      (failure) {
+        _state = AppStateError(failure);
+      },
+    );
+    notifyListeners();
   }
 
+  /// Clears the log buffer for a specific project.
   void clearLogs(String projectName) {
     _projectLogs[projectName] = [];
     notifyListeners();
   }
 
-  Future<void> runCommand(String projectName, String workingDir, String command) async {
-    final config = appProvider.connectionConfig;
-    if (config == null) return;
+  /// Runs a compose command (e.g., 'up', 'down') for a project and streams the output.
+  Future<void> runCommand(
+    String projectName,
+    String workingDir,
+    String command,
+  ) async {
+    if (!authProvider.isConnected) {
+      return;
+    }
 
     _projectIsRunning[projectName] = true;
     _projectLogs[projectName] = ['> docker compose $command'];
     notifyListeners();
 
-    try {
-      final request = await ComposeService.runCommandStream(config, projectName, workingDir, command);
-      
-      // Use await for so execution suspends here until the stream is fully consumed
-      final stream = request.stream.transform(utf8.decoder).transform(const LineSplitter());
-      
-      try {
-        await for (final line in stream) {
-          if (line.isEmpty) continue;
-          try {
-            final data = jsonDecode(line);
-            if (data['type'] == 'stdout' || data['type'] == 'stderr' || data['type'] == 'error') {
-              _projectLogs[projectName]!.add(data['data']?.toString() ?? '');
-              notifyListeners();
-            } else if (data['type'] == 'done') {
-              _projectLogs[projectName]!.add('> Exited with code ${data['exit_code']}');
+    final result = await _composeService.runCommandStream(
+      projectName,
+      workingDir,
+      command,
+    );
+
+    await result.fold(
+      (stream) async {
+        final lineStream = stream
+            .transform(utf8.decoder)
+            .transform(const LineSplitter());
+
+        try {
+          await for (final line in lineStream) {
+            if (line.isEmpty) {
+              continue;
+            }
+            try {
+              final data = jsonDecode(line);
+              if (data['type'] == 'stdout' ||
+                  data['type'] == 'stderr' ||
+                  data['type'] == 'error') {
+                _projectLogs[projectName]!.add(data['data']?.toString() ?? '');
+                notifyListeners();
+              } else if (data['type'] == 'done') {
+                _projectLogs[projectName]!.add(
+                  '> Exited with code ${data['exit_code']}',
+                );
+                notifyListeners();
+              }
+            } catch (_) {
+              _projectLogs[projectName]!.add(line);
               notifyListeners();
             }
-          } catch (_) {
-            _projectLogs[projectName]!.add(line);
-            notifyListeners();
           }
+        } catch (e) {
+          _projectLogs[projectName]!.add('> Connection Error: $e');
         }
-      } catch (e) {
-        _projectLogs[projectName]!.add('> Connection Error: $e');
-      }
+      },
+      (failure) async {
+        _projectLogs[projectName]!.add('> Error: ${failure.message}');
+      },
+    );
 
-      _projectIsRunning[projectName] = false;
-      loadProjects(); // refresh container statuses
-      notifyListeners();
-
-    } catch (e) {
-      _projectLogs[projectName]!.add('> Error: $e');
-      _projectIsRunning[projectName] = false;
-      notifyListeners();
-    }
+    _projectIsRunning[projectName] = false;
+    await loadProjects(silent: true);
+    notifyListeners();
   }
 
-  Future<bool> registerProject(String name, String workingDir, List<String> configFiles) async {
-    final config = appProvider.connectionConfig;
-    if (config == null) {
-      error = 'Not connected';
-      notifyListeners();
+  Future<bool> registerProject(
+    String name,
+    String workingDir,
+    List<String> configFiles,
+  ) async {
+    if (!authProvider.isConnected) {
       return false;
     }
 
-    isLoading = true;
-    error = null;
-    notifyListeners();
-
-    try {
-      final success = await ComposeService.registerProject(config, name, workingDir, configFiles);
-      if (success) {
-        await loadProjects(); // reload to show new project
-      } else {
-        error = 'Failed to register project';
-      }
-      return success;
-    } catch (e) {
-      error = 'Error registering project: $e';
-      return false;
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
+    final result = await _composeService.registerProject(
+      name,
+      workingDir,
+      configFiles,
+    );
+    return result.fold(
+      (success) async {
+        if (success) {
+          await loadProjects(silent: true);
+        }
+        return success;
+      },
+      (_) => false,
+    );
   }
 
   Future<bool> unregisterProject(String name) async {
-    final config = appProvider.connectionConfig;
-    if (config == null) {
-      error = 'Not connected';
-      notifyListeners();
+    if (!authProvider.isConnected) {
       return false;
     }
 
-    isLoading = true;
-    error = null;
-    notifyListeners();
-
-    try {
-      final success = await ComposeService.unregisterProject(config, name);
-      if (success) {
-        await loadProjects(); // reload to remove project
-      } else {
-        error = 'Failed to unregister project';
-      }
-      return success;
-    } catch (e) {
-      error = 'Error unregistering project: $e';
-      return false;
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
+    final result = await _composeService.unregisterProject(name);
+    return result.fold(
+      (success) async {
+        if (success) {
+          await loadProjects(silent: true);
+        }
+        return success;
+      },
+      (_) => false,
+    );
   }
 }

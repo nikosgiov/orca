@@ -1,8 +1,12 @@
-import '../services/container_service.dart';
-import '../services/docker_service.dart';
+import 'package:docker_controller/core/di/service_locator.dart';
+import 'package:docker_controller/models/docker_container.dart';
+import 'package:docker_controller/services/container_service.dart';
+import 'docker_stats_utils.dart';
 
 class ResourceStatsUtils {
-  static Map<String, dynamic> calculateBasicResourceStats(Map<String, dynamic>? resourceStats) {
+  static Map<String, dynamic> calculateBasicResourceStats(
+    Map<String, dynamic>? resourceStats,
+  ) {
     if (resourceStats == null) {
       return {
         'cpu': 0.0,
@@ -39,10 +43,13 @@ class ResourceStatsUtils {
   }
 
   static Future<Map<String, dynamic>> refreshDetailedStats(
-    Map<String, dynamic>? resourceStats,
-    dynamic connectionConfig,
-  ) async {
-    if (connectionConfig == null || resourceStats == null) return resourceStats ?? {};
+    Map<String, dynamic>? resourceStats, [
+    dynamic _,
+  ]) async {
+    if (resourceStats == null) {
+      return {};
+    }
+
     double totalCpu = 0.0;
     double totalMemory = 0.0;
     int activeCount = 0;
@@ -50,43 +57,35 @@ class ResourceStatsUtils {
       final state = entry.value as String? ?? '';
       return state == 'running';
     }).toList();
+
     const int maxConcurrent = 3;
     for (int i = 0; i < runningContainers.length; i += maxConcurrent) {
       final batch = runningContainers.skip(i).take(maxConcurrent);
       final batchResults = await Future.wait(
         batch.map((entry) async {
-          final containerId = entry.key as String?;
-          if (containerId != null) {
-            try {
-              final stats = await ContainerService.getContainerStats(connectionConfig, containerId)
-                  .timeout(const Duration(seconds: 2));
-              if (stats != null) {
-                return {
-                  'cpu': DockerService.calculateCpuUsage(stats),
-                  'memory': DockerService.calculateMemoryUsage(stats),
-                };
-              }
-            } catch (_) {}
-          }
-          return null;
+          final result = await getIt<ContainerService>().getContainerStats(entry.key);
+          return result.fold(
+            (stats) => {
+              'cpu': DockerStatsUtils.calculateCpuUsage(stats),
+              'memory': DockerStatsUtils.calculateMemoryUsage(stats),
+            },
+            (_) => null,
+          );
         }),
       );
       for (final result in batchResults) {
         if (result != null) {
-          final cpu = result['cpu'] ?? 0.0;
-          final memory = result['memory'] ?? 0.0;
-          totalCpu += cpu;
-          totalMemory += memory;
+          totalCpu += result['cpu'] ?? 0.0;
+          totalMemory += result['memory'] ?? 0.0;
           activeCount++;
         }
       }
     }
+
     if (activeCount > 0) {
-      final avgCpu = totalCpu / activeCount;
-      final avgMemory = totalMemory / activeCount;
       return {
-        'cpu': avgCpu,
-        'memory': avgMemory,
+        'cpu': totalCpu / activeCount,
+        'memory': totalMemory / activeCount,
         'running': resourceStats['running'],
         'stopped': resourceStats['stopped'],
         'exited': resourceStats['exited'],
@@ -95,7 +94,9 @@ class ResourceStatsUtils {
     return resourceStats;
   }
 
-  static Map<String, dynamic> calculateBasicResourceStatsFromContainers(List<Map<String, dynamic>>? containers) {
+  static Map<String, dynamic> calculateBasicResourceStatsFromContainers(
+    List<DockerContainer>? containers,
+  ) {
     if (containers == null || containers.isEmpty) {
       return {
         'cpu': 0.0,
@@ -109,7 +110,7 @@ class ResourceStatsUtils {
     int stopped = 0;
     int exited = 0;
     for (final container in containers) {
-      final state = container['State'] as String? ?? '';
+      final state = container.stateDisplay;
       switch (state) {
         case 'running':
           running++;
@@ -130,4 +131,4 @@ class ResourceStatsUtils {
       'exited': exited,
     };
   }
-} 
+}

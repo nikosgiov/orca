@@ -1,81 +1,75 @@
-import 'dart:convert';
-import 'dart:developer' as developer;
-import '../models/connection_config.dart';
+import 'package:docker_controller/core/utils/result.dart';
+import 'package:docker_controller/models/app_error.dart';
+import 'package:docker_controller/models/docker_image.dart';
 import 'docker_service.dart';
 
 class ImageService {
-  static const String _logPrefix = 'myapp';
+  ImageService(this._dockerService);
 
-  static Future<List<Map<String, dynamic>>?> getImages(ConnectionConfig config) async {
-    try {
-      final response = await DockerService.makeRequest(config, '/images/json');
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body) as List;
-        developer.log('$_logPrefix: Successfully fetched ${data.length} images', name: 'ImageService');
-        return data.cast<Map<String, dynamic>>();
-      } else {
-        developer.log('$_logPrefix: Failed to fetch images - Status: ${response.statusCode}', name: 'ImageService');
-        throw Exception('HTTP ${response.statusCode}: Failed to fetch images: ${response.body}');
-      }
-    } catch (e) {
-      developer.log('$_logPrefix: Error fetching images: $e', name: 'ImageService');
-      rethrow; // Re-throw the exception so it can be caught by calling methods
-    }
+  final DockerService _dockerService;
+
+  Future<Result<List<DockerImage>, AppError>> getImages() async {
+    final result = await _dockerService.get<List<dynamic>>('/images/json');
+    return result.fold(
+      (response) {
+        if (response.statusCode == 200 && response.data != null) {
+          final images = response.data!
+              .map((item) => DockerImage.fromJson(item as Map<String, dynamic>))
+              .toList();
+          return Success(images);
+        }
+        return Failure(AppError(message: 'Failed to fetch images: ${response.statusCode}'));
+      },
+      (failure) => Failure(failure),
+    );
   }
 
-  static Future<bool> pullImage(ConnectionConfig config, String imageName, String tag) async {
-    try {
-      final fullImageName = '$imageName:$tag';
-      final response = await DockerService.makePostRequest(
-        config,
-        '/images/create?fromImage=${Uri.encodeComponent(imageName)}&tag=${Uri.encodeComponent(tag)}',
-      );
-      if (response.statusCode == 200) {
-        developer.log('$_logPrefix: Successfully pulled image $fullImageName', name: 'ImageService');
-        return true;
-      } else {
-        developer.log('$_logPrefix: Failed to pull image $fullImageName - Status: ${response.statusCode}, Body: ${response.body}', name: 'ImageService');
-        return false;
-      }
-    } catch (e) {
-      developer.log('$_logPrefix: Error pulling image $imageName:$tag: $e', name: 'ImageService');
-      return false;
-    }
+  Future<Result<bool, AppError>> pullImage(String imageName, String tag) async {
+    final result = await _dockerService.post(
+      '/images/create',
+      queryParameters: {'fromImage': imageName, 'tag': tag},
+    );
+    return result.fold(
+      (response) {
+        if (response.statusCode == 200) {
+          return const Success(true);
+        }
+        return Failure(AppError(message: 'Failed to pull image: ${response.statusCode}'));
+      },
+      (failure) => Failure(failure),
+    );
   }
 
-  static Future<bool> imageExists(ConnectionConfig config, String imageName, String tag) async {
-    try {
-      final fullImageName = '$imageName:$tag';
-      final response = await DockerService.makeRequest(config, '/images/$fullImageName/json');
-      return response.statusCode == 200;
-    } catch (e) {
-      return false;
-    }
+  Future<Result<bool, AppError>> imageExists(String imageName, String tag) async {
+    final fullImageName = '$imageName:$tag';
+    final result = await _dockerService.get('/images/$fullImageName/json');
+    return result.fold(
+      (response) => Success(response.statusCode == 200),
+      (_) => const Success(false),
+    );
   }
 
-  static Future<bool> ensureImageExists(ConnectionConfig config, String imageName, String tag) async {
-    final exists = await imageExists(config, imageName, tag);
+  Future<bool> ensureImageExists(String imageName, String tag) async {
+    final existsResult = await imageExists(imageName, tag);
+    final exists = existsResult.fold((val) => val, (_) => false);
     if (exists) {
-      developer.log('$_logPrefix: Image $imageName:$tag already exists locally', name: 'ImageService');
       return true;
     }
-    developer.log('$_logPrefix: Image $imageName:$tag not found locally, attempting to pull...', name: 'ImageService');
-    return await pullImage(config, imageName, tag);
+    
+    final pullResult = await pullImage(imageName, tag);
+    return pullResult.fold((val) => val, (_) => false);
   }
 
-  static Future<bool> removeImage(ConnectionConfig config, String imageId) async {
-    try {
-      final response = await DockerService.makeDeleteRequest(config, '/images/$imageId');
-      if (response.statusCode == 200) {
-        developer.log('$_logPrefix: Successfully removed image $imageId', name: 'ImageService');
-        return true;
-      } else {
-        developer.log('$_logPrefix: Failed to remove image $imageId - Status: ${response.statusCode}, Body: ${response.body}', name: 'ImageService');
-        return false;
-      }
-    } catch (e) {
-      developer.log('$_logPrefix: Error removing image $imageId: $e', name: 'ImageService');
-      return false;
-    }
+  Future<Result<bool, AppError>> removeImage(String imageId) async {
+    final result = await _dockerService.delete('/images/$imageId');
+    return result.fold(
+      (response) {
+        if (response.statusCode == 200) {
+          return const Success(true);
+        }
+        return Failure(AppError(message: 'Failed to remove image: ${response.statusCode}'));
+      },
+      (failure) => Failure(failure),
+    );
   }
-} 
+}

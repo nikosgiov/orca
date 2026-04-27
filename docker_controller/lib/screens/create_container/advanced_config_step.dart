@@ -1,11 +1,13 @@
+import 'package:docker_controller/providers/create_container_provider.dart';
+import 'package:docker_controller/utils/validators.dart';
+import 'package:docker_controller/widgets/dynamic_config_list.dart';
 import 'package:flutter/material.dart';
-import '../../providers/create_container_provider.dart';
-import '../../widgets/dynamic_config_list.dart';
+
+import '../../l10n/app_localizations.dart';
 
 class AdvancedConfigStep extends StatelessWidget {
-  final CreateContainerProvider provider;
-
   const AdvancedConfigStep({super.key, required this.provider});
+  final CreateContainerProvider provider;
 
   @override
   Widget build(BuildContext context) {
@@ -13,21 +15,31 @@ class AdvancedConfigStep extends StatelessWidget {
       child: Column(
         children: [
           DynamicConfigList(
-            title: 'Port Mappings',
+            title: AppLocalizations.of(context)!.portMappings,
             items: provider.portMappings,
-            label1: 'Host Port',
-            label2: 'Container Port',
+            label1: AppLocalizations.of(context)!.hostPort,
+            label2: AppLocalizations.of(context)!.containerPort,
             icon: Icons.link,
             onAdd: provider.addPortMapping,
             onUpdate: provider.updatePortMapping,
             onRemove: provider.removePortMapping,
+            validator1: (val) => Validators.validatePort(
+              val,
+              requiredError: AppLocalizations.of(context)!.portRequired,
+              invalidError: AppLocalizations.of(context)!.portInvalid,
+            ),
+            validator2: (val) => Validators.validatePort(
+              val,
+              requiredError: AppLocalizations.of(context)!.portRequired,
+              invalidError: AppLocalizations.of(context)!.portInvalid,
+            ),
           ),
           const SizedBox(height: 16),
           DynamicConfigList(
-            title: 'Volume Mappings',
+            title: AppLocalizations.of(context)!.volumeMappings,
             items: provider.volumeMappings,
-            label1: 'Host Path',
-            label2: 'Container Path',
+            label1: AppLocalizations.of(context)!.hostPath,
+            label2: AppLocalizations.of(context)!.containerPath,
             icon: Icons.folder,
             onAdd: provider.addVolumeMapping,
             onUpdate: provider.updateVolumeMapping,
@@ -35,10 +47,10 @@ class AdvancedConfigStep extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           DynamicConfigList(
-            title: 'Environment Variables',
+            title: AppLocalizations.of(context)!.envVarsLabel,
             items: provider.environmentVars,
-            label1: 'Variable Name',
-            label2: 'Value',
+            label1: AppLocalizations.of(context)!.variableName,
+            label2: AppLocalizations.of(context)!.value,
             icon: Icons.settings,
             onAdd: provider.addEnvironmentVar,
             onUpdate: provider.updateEnvironmentVar,
@@ -48,13 +60,13 @@ class AdvancedConfigStep extends StatelessWidget {
           DropdownButtonFormField<String>(
             initialValue: provider.networkMode,
             decoration: InputDecoration(
-              labelText: 'Network Mode',
+              labelText: AppLocalizations.of(context)!.networkModeLabel,
               prefixIcon: const Icon(Icons.wifi),
             ),
-            items: const [
-              DropdownMenuItem(value: 'bridge', child: Text('Bridge')),
-              DropdownMenuItem(value: 'host', child: Text('Host')),
-              DropdownMenuItem(value: 'none', child: Text('None')),
+            items: [
+              DropdownMenuItem(value: 'bridge', child: Text(AppLocalizations.of(context)!.networkBridge)),
+              DropdownMenuItem(value: 'host', child: Text(AppLocalizations.of(context)!.networkHost)),
+              DropdownMenuItem(value: 'none', child: Text(AppLocalizations.of(context)!.networkNone)),
             ],
             onChanged: provider.setNetworkMode,
           ),

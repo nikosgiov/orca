@@ -1,26 +1,31 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_paddings.dart';
+import 'package:docker_controller/constants/app_text_styles.dart';
+import 'package:docker_controller/providers/container_detail_provider.dart';
+import 'package:docker_controller/utils/docker_stats_utils.dart';
 import 'package:flutter/material.dart';
-import '../../constants/app_colors.dart';
-import '../../constants/app_text_styles.dart';
-import '../../constants/app_strings.dart';
-import '../../constants/app_paddings.dart';
-import '../../services/docker_service.dart';
-import '../../providers/container_detail_provider.dart';
+
+import '../../l10n/app_localizations.dart';
 
 class StatsTab extends StatelessWidget {
-  final ContainerDetailProvider provider;
   const StatsTab({super.key, required this.provider});
+  final ContainerDetailProvider provider;
 
   @override
   Widget build(BuildContext context) {
     if (provider.containerStats == null) {
       return Center(
-        child: Text(AppStrings.noStatsAvailable, style: AppTextStyles.caption),
+        child: Text(AppLocalizations.of(context)!.noStatsAvailable, style: AppTextStyles.caption),
       );
     }
-    final cpuUsage = DockerService.calculateCpuUsage(provider.containerStats!);
-    final memoryUsage = DockerService.calculateMemoryUsage(provider.containerStats!);
-    final diskIO = DockerService.calculateDiskIO(provider.containerStats!);
-    final networkIO = DockerService.calculateNetworkIO(provider.containerStats!);
+    final cpuUsage = DockerStatsUtils.calculateCpuUsage(provider.containerStats!);
+    final memoryUsage = DockerStatsUtils.calculateMemoryUsage(
+      provider.containerStats!,
+    );
+    final diskIO = DockerStatsUtils.calculateDiskIO(provider.containerStats!);
+    final networkIO = DockerStatsUtils.calculateNetworkIO(
+      provider.containerStats!,
+    );
 
     return SingleChildScrollView(
       padding: AppPaddings.tabContent,
@@ -28,7 +33,7 @@ class StatsTab extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _GlassStatCard(
-            title: AppStrings.cpuUsage,
+            title: AppLocalizations.of(context)!.cpuUsage,
             value: '${cpuUsage.toStringAsFixed(1)}%',
             icon: Icons.memory,
             color: const Color(0xFF60A5FA),
@@ -36,7 +41,7 @@ class StatsTab extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _GlassStatCard(
-            title: AppStrings.memoryUsage,
+            title: AppLocalizations.of(context)!.memoryUsage,
             value: '${memoryUsage.toStringAsFixed(1)}%',
             icon: Icons.storage,
             color: const Color(0xFFC084FC),
@@ -44,7 +49,7 @@ class StatsTab extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _GlassStatCard(
-            title: AppStrings.networkIO,
+            title: AppLocalizations.of(context)!.networkIO,
             value: '${networkIO.toStringAsFixed(2)} MB/s',
             icon: Icons.wifi,
             color: const Color(0xFF34D399),
@@ -52,7 +57,7 @@ class StatsTab extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _GlassStatCard(
-            title: AppStrings.diskIO,
+            title: AppLocalizations.of(context)!.diskIO,
             value: '${diskIO.toStringAsFixed(2)} MB/s',
             icon: Icons.storage_outlined,
             color: const Color(0xFFFBBF24),
@@ -65,12 +70,6 @@ class StatsTab extends StatelessWidget {
 }
 
 class _GlassStatCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final IconData icon;
-  final Color color;
-  final double fraction;
-
   const _GlassStatCard({
     required this.title,
     required this.value,
@@ -78,6 +77,11 @@ class _GlassStatCard extends StatelessWidget {
     required this.color,
     required this.fraction,
   });
+  final String title;
+  final String value;
+  final IconData icon;
+  final Color color;
+  final double fraction;
 
   @override
   Widget build(BuildContext context) {
@@ -147,12 +151,24 @@ class _GlassStatCard extends StatelessWidget {
 
 // Keep SimpleStatsCard as alias for backward compat if anything uses it
 class SimpleStatsCard extends StatelessWidget {
+  const SimpleStatsCard({
+    super.key,
+    required this.title,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
   final String title;
   final String value;
   final IconData icon;
   final Color color;
-  const SimpleStatsCard({super.key, required this.title, required this.value, required this.icon, required this.color});
 
   @override
-  Widget build(BuildContext context) => _GlassStatCard(title: title, value: value, icon: icon, color: color, fraction: 0);
+  Widget build(BuildContext context) => _GlassStatCard(
+    title: title,
+    value: value,
+    icon: icon,
+    color: color,
+    fraction: 0,
+  );
 }

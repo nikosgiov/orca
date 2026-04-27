@@ -1,11 +1,22 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_delays.dart';
+import 'package:docker_controller/constants/app_dimensions.dart';
+import 'package:docker_controller/constants/app_text_styles.dart';
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
-import '../constants/app_delays.dart';
-import '../constants/app_dimensions.dart';
-import '../constants/app_text_styles.dart';
 
 /// An animated progress bar that shows the current step in a multi-step wizard.
 class StepProgressBar extends StatelessWidget {
+  const StepProgressBar({
+    super.key,
+    required this.stepTitles,
+    required this.currentStep,
+    this.backgroundColor = AppColors.slate400,
+    this.fillColor = AppColors.primary,
+    this.height = AppDimensions.progressBarHeight,
+    this.width = 300,
+    this.titleStyle,
+    this.progressStyle,
+  });
   final List<String> stepTitles;
   final int currentStep;
   final Color backgroundColor;
@@ -14,18 +25,6 @@ class StepProgressBar extends StatelessWidget {
   final double width;
   final TextStyle? titleStyle;
   final TextStyle? progressStyle;
-
-  const StepProgressBar({
-    super.key,
-    required this.stepTitles,
-    required this.currentStep,
-    this.backgroundColor = AppColors.grey400,
-    this.fillColor = AppColors.primaryCyan,
-    this.height = AppDimensions.progressBarHeight,
-    this.width = 300,
-    this.titleStyle,
-    this.progressStyle,
-  });
 
   @override
   Widget build(BuildContext context) {

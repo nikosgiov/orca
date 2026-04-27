@@ -1,16 +1,19 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_text_styles.dart';
+import 'package:docker_controller/providers/container_detail_provider.dart';
+import 'package:docker_controller/widgets/container_action_button.dart';
 import 'package:flutter/material.dart';
-import '../../constants/app_colors.dart';
-import '../../constants/app_text_styles.dart';
-import '../../providers/container_detail_provider.dart';
+
+import '../../l10n/app_localizations.dart';
 import '../exec_terminal_screen.dart';
 
 class ActionsTab extends StatelessWidget {
-  final ContainerDetailProvider provider;
   const ActionsTab({super.key, required this.provider});
+  final ContainerDetailProvider provider;
 
   @override
   Widget build(BuildContext context) {
-    final state = provider.containerInfo?['State']?['Status']?.toString() ?? 'unknown';
+    final state = provider.containerInfo?.stateDisplay ?? 'unknown';
     final isRunning = state == 'running';
     final isPaused = state == 'paused';
     final isStopped = state == 'stopped' || state == 'exited';
@@ -26,51 +29,56 @@ class ActionsTab extends StatelessWidget {
 
           if (isStopped || isPaused)
             ContainerActionButton(
-              label: 'Start Container',
+              label: AppLocalizations.of(context)!.startContainer,
               icon: Icons.play_arrow,
-              color: AppColors.successGreen,
-              onPressed: () => _handleAction(context, provider.startContainer, 'start'),
+              color: AppColors.success,
+              onPressed: () =>
+                  _handleAction(context, provider.startContainer, 'start'),
             ),
           if (isRunning)
             ContainerActionButton(
-              label: 'Stop Container',
+              label: AppLocalizations.of(context)!.stopContainer,
               icon: Icons.stop,
-              color: AppColors.errorRed,
-              onPressed: () => _handleAction(context, provider.stopContainer, 'stop'),
+              color: AppColors.error,
+              onPressed: () =>
+                  _handleAction(context, provider.stopContainer, 'stop'),
             ),
           if (isRunning)
             ContainerActionButton(
-              label: 'Pause Container',
+              label: AppLocalizations.of(context)!.pauseContainer,
               icon: Icons.pause,
               color: const Color(0xFFFBBF24),
-              onPressed: () => _handleAction(context, provider.pauseContainer, 'pause'),
+              onPressed: () =>
+                  _handleAction(context, provider.pauseContainer, 'pause'),
             ),
           if (isPaused)
             ContainerActionButton(
-              label: 'Resume Container',
+              label: AppLocalizations.of(context)!.resumeContainer,
               icon: Icons.play_arrow,
-              color: AppColors.successGreen,
-              onPressed: () => _handleAction(context, provider.resumeContainer, 'resume'),
+              color: AppColors.success,
+              onPressed: () =>
+                  _handleAction(context, provider.resumeContainer, 'resume'),
             ),
           if (isRunning || isStopped)
             ContainerActionButton(
-              label: 'Restart Container',
+              label: AppLocalizations.of(context)!.restartContainer,
               icon: Icons.refresh,
               color: AppColors.primary,
-              onPressed: () => _handleAction(context, provider.restartContainer, 'restart'),
+              onPressed: () =>
+                  _handleAction(context, provider.restartContainer, 'restart'),
             ),
           if (isRunning)
             ContainerActionButton(
-              label: 'Open Terminal',
+              label: AppLocalizations.of(context)!.openTerminal,
               icon: Icons.terminal,
               color: const Color(0xFF10B981), // Emerald green
               onPressed: () {
-                if (provider.appProvider.connectionConfig != null) {
+                if (provider.authProvider.connectionConfig != null) {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => ExecTerminalScreen(
-                        config: provider.appProvider.connectionConfig!,
+                        config: provider.authProvider.connectionConfig!,
                         containerId: provider.containerId,
                         containerName: provider.containerName,
                       ),
@@ -81,128 +89,184 @@ class ActionsTab extends StatelessWidget {
             ),
           if (isRunning)
             ContainerActionButton(
-              label: 'Kill Container',
+              label: AppLocalizations.of(context)!.killContainer,
               icon: Icons.close,
-              color: AppColors.errorRed,
+              color: AppColors.error,
               onPressed: () async {
+                final l10n = AppLocalizations.of(context)!;
                 final confirmed = await showDialog<bool>(
                   context: context,
                   builder: (context) => AlertDialog(
-                    title: const Text('Kill Container'),
-                    content: Text('Are you sure you want to kill "${provider.containerName}"?'),
+                    title: Text(l10n.killConfirmTitle),
+                    content: Text(
+                      l10n.killConfirmMessage(provider.containerName),
+                    ),
                     actions: [
-                      TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: Text(l10n.cancel),
+                      ),
                       TextButton(
                         onPressed: () => Navigator.pop(context, true),
-                        style: TextButton.styleFrom(foregroundColor: AppColors.errorRed),
-                        child: const Text('Kill'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.error,
+                        ),
+                        child: Text(l10n.killContainer),
                       ),
                     ],
                   ),
                 );
                 if (confirmed == true) {
-                  if (!context.mounted) return;
+                  if (!context.mounted) {
+                    return;
+                  }
                   final (success, errorMsg) = await provider.killContainer();
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(success ? 'Killed ${provider.containerName}' : errorMsg ?? 'Failed'),
-                    backgroundColor: success ? AppColors.successGreen : AppColors.errorRed,
-                  ));
+                  if (!context.mounted) {
+                    return;
+                  }
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        success
+                            ? l10n.killedContainer(provider.containerName)
+                            : errorMsg ?? l10n.failed,
+                      ),
+                      backgroundColor: success
+                          ? AppColors.success
+                          : AppColors.error,
+                    ),
+                  );
                 }
               },
             ),
           const SizedBox(height: 8),
           ContainerActionButton(
-            label: 'Rename Container',
+            label: AppLocalizations.of(context)!.renameContainer,
             icon: Icons.edit_outlined,
             color: AppColors.primary,
             onPressed: () async {
-              final controller = TextEditingController(text: provider.containerName);
+              final l10n = AppLocalizations.of(context)!;
+              final controller = TextEditingController(
+                text: provider.containerName,
+              );
               final newName = await showDialog<String>(
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: const Text('Rename Container'),
+                  title: Text(l10n.renameConfirmTitle),
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('Enter new name:'),
+                      Text(l10n.enterNewName),
                       const SizedBox(height: 16),
                       TextField(
                         autofocus: true,
                         controller: controller,
-                        decoration: const InputDecoration(labelText: 'New Name', hintText: 'container-name'),
-                        onSubmitted: (v) { if (v.trim().isNotEmpty) Navigator.pop(context, v.trim()); },
+                        decoration: InputDecoration(
+                          labelText: l10n.newName,
+                          hintText: 'container-name',
+                        ),
+                        onSubmitted: (v) {
+                          if (v.trim().isNotEmpty) {
+                            Navigator.pop(context, v.trim());
+                          }
+                        },
                       ),
                     ],
                   ),
                   actions: [
-                    TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(l10n.cancel),
+                    ),
                     TextButton(
                       onPressed: () {
                         final n = controller.text.trim();
-                        if (n.isNotEmpty) Navigator.pop(context, n);
+                        if (n.isNotEmpty) {
+                          Navigator.pop(context, n);
+                        }
                       },
-                      child: const Text('Rename'),
+                      child: Text(l10n.renameContainer),
                     ),
                   ],
                 ),
               );
-              if (newName == null || newName.trim().isEmpty) return;
-              if (newName.trim() == provider.containerName) {
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text('Name is already the same'),
-                  backgroundColor: Colors.orange,
-                ));
+              if (newName == null || newName.trim().isEmpty) {
                 return;
               }
-              if (!RegExp(r'^[a-zA-Z0-9][a-zA-Z0-9_.-]*$').hasMatch(newName.trim())) {
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text('Invalid name. Use only letters, numbers, dots, underscores, hyphens.'),
-                  backgroundColor: Color(0xFFEF4444),
-                ));
+              final (success, errorMsg) = await provider.renameContainer(
+                newName.trim(),
+              );
+              if (!context.mounted) {
                 return;
               }
-              if (!context.mounted) return;
-              final (success, errorMsg) = await provider.renameContainer(newName.trim());
-              if (!context.mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(success ? 'Renamed to ${newName.trim()}' : errorMsg ?? 'Failed to rename'),
-                backgroundColor: success ? AppColors.successGreen : AppColors.errorRed,
-              ));
-              if (success) Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    success
+                        ? l10n.renamedTo(newName.trim())
+                        : errorMsg ?? l10n.failedToRename,
+                  ),
+                  backgroundColor: success
+                      ? AppColors.success
+                      : AppColors.error,
+                ),
+              );
+              if (success) {
+                Navigator.pop(context);
+              }
             },
           ),
           ContainerActionButton(
-            label: 'Remove Container',
+            label: AppLocalizations.of(context)!.removeContainer,
             icon: Icons.delete_outline,
-            color: AppColors.errorRed,
+            color: AppColors.error,
             onPressed: () async {
+              final l10n = AppLocalizations.of(context)!;
               final confirmed = await showDialog<bool>(
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: const Text('Remove Container'),
-                  content: Text('Remove "${provider.containerName}"? This cannot be undone.'),
+                  title: Text(l10n.removeConfirmTitle),
+                  content: Text(
+                    l10n.removeConfirmMessage(provider.containerName),
+                  ),
                   actions: [
-                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: Text(l10n.cancel),
+                    ),
                     TextButton(
                       onPressed: () => Navigator.pop(context, true),
-                      style: TextButton.styleFrom(foregroundColor: AppColors.errorRed),
-                      child: const Text('Remove'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.error,
+                      ),
+                      child: Text(l10n.removeContainer),
                     ),
                   ],
                 ),
               );
               if (confirmed == true) {
-                if (!context.mounted) return;
+                if (!context.mounted) {
+                  return;
+                }
                 final (success, errorMsg) = await provider.removeContainer();
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text(success ? 'Removed ${provider.containerName}' : errorMsg ?? 'Failed to remove'),
-                  backgroundColor: success ? AppColors.successGreen : AppColors.errorRed,
-                ));
-                if (success) Navigator.pop(context);
+                if (!context.mounted) {
+                  return;
+                }
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      success
+                          ? l10n.removedContainer(provider.containerName)
+                          : errorMsg ?? l10n.failedToRemove,
+                    ),
+                    backgroundColor: success
+                        ? AppColors.success
+                        : AppColors.error,
+                  ),
+                );
+                if (success) {
+                  Navigator.pop(context);
+                }
               }
             },
           ),
@@ -211,31 +275,44 @@ class ActionsTab extends StatelessWidget {
     );
   }
 
-  Future<void> _handleAction(BuildContext context, Future<(bool, String?)> Function() action, String actionName) async {
+  Future<void> _handleAction(
+    BuildContext context,
+    Future<(bool, String?)> Function() action,
+    String actionName,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
     final (success, errorMsg) = await action();
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(success ? 'Successfully ${actionName}ed container' : errorMsg ?? 'Failed to $actionName'),
-      backgroundColor: success ? AppColors.successGreen : AppColors.errorRed,
-    ));
+    if (!context.mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          success
+              ? l10n.actionSuccess(actionName)
+              : errorMsg ?? l10n.actionFailed(actionName),
+        ),
+        backgroundColor: success ? AppColors.success : AppColors.error,
+      ),
+    );
   }
 }
 
 // ── Status card (glass) ────────────────────────────────────────────────────────
 
 class _ContainerStatusCard extends StatelessWidget {
-  final String state;
   const _ContainerStatusCard({required this.state});
+  final String state;
 
   @override
   Widget build(BuildContext context) {
     final isRunning = state == 'running';
     final isPaused = state == 'paused';
     final color = isRunning
-        ? AppColors.successGreen
+        ? AppColors.success
         : isPaused
-            ? const Color(0xFFFBBF24)
-            : AppColors.textMuted;
+        ? const Color(0xFFFBBF24)
+        : AppColors.textMuted;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -253,7 +330,11 @@ class _ContainerStatusCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
-              isRunning ? Icons.play_circle_outline : isPaused ? Icons.pause_circle_outline : Icons.stop_circle_outlined,
+              isRunning
+                  ? Icons.play_circle_outline
+                  : isPaused
+                  ? Icons.pause_circle_outline
+                  : Icons.stop_circle_outlined,
               color: color,
               size: 20,
             ),
@@ -262,7 +343,7 @@ class _ContainerStatusCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('STATUS', style: AppTextStyles.sectionLabel),
+              Text(AppLocalizations.of(context)!.statusLabel, style: AppTextStyles.sectionLabel),
               const SizedBox(height: 2),
               Text(
                 state.toUpperCase(),
@@ -283,51 +364,3 @@ class _ContainerStatusCard extends StatelessWidget {
 
 // ── Action button (glass pill) ────────────────────────────────────────────────
 
-class ContainerActionButton extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final Color color;
-  final VoidCallback onPressed;
-
-  const ContainerActionButton({
-    super.key,
-    required this.label,
-    required this.icon,
-    required this.color,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: GestureDetector(
-        onTap: onPressed,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: color.withValues(alpha: 0.35)),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 18, color: color),
-              const SizedBox(width: 8),
-              Text(
-                label.toUpperCase(),
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.2,
-                  color: color,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}

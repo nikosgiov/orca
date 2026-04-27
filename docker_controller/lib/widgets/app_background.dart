@@ -1,25 +1,21 @@
+import 'package:docker_controller/constants/app_gradients.dart';
 import 'package:flutter/material.dart';
-import '../constants/app_gradients.dart';
 
 class AppBackground extends StatelessWidget {
-  final Widget child;
-  final Offset position;
-  final double scale;
-
   const AppBackground({
     super.key,
     required this.child,
     this.position = const Offset(0, 0),
     this.scale = 1,
   });
+  final Widget child;
+  final Offset position;
+  final double scale;
 
   @override
   Widget build(BuildContext context) {
-
     return Container(
-      decoration: const BoxDecoration(
-        gradient: AppGradients.background,
-      ),
+      decoration: const BoxDecoration(gradient: AppGradients.background),
       child: Stack(
         children: [
           Positioned(

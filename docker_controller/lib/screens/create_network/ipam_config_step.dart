@@ -1,10 +1,9 @@
+import 'package:docker_controller/providers/create_network_provider.dart';
 import 'package:flutter/material.dart';
-import '../../providers/create_network_provider.dart';
 
 class IpamConfigStep extends StatelessWidget {
-  final CreateNetworkProvider provider;
-
   const IpamConfigStep({super.key, required this.provider});
+  final CreateNetworkProvider provider;
 
   @override
   Widget build(BuildContext context) {
@@ -14,22 +13,22 @@ class IpamConfigStep extends StatelessWidget {
           const SizedBox(height: 16),
           TextFormField(
             controller: provider.subnetController,
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               labelText: 'Subnet (optional)',
               hintText: '172.20.0.0/16',
               floatingLabelBehavior: FloatingLabelBehavior.always,
-              prefixIcon: const Icon(Icons.network_check),
+              prefixIcon: Icon(Icons.network_check),
             ),
             onChanged: provider.setSubnet,
           ),
           const SizedBox(height: 16),
           TextFormField(
             controller: provider.gatewayController,
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               labelText: 'Gateway (optional)',
               hintText: '172.20.0.1',
               floatingLabelBehavior: FloatingLabelBehavior.always,
-              prefixIcon: const Icon(Icons.router),
+              prefixIcon: Icon(Icons.router),
             ),
             onChanged: provider.setGateway,
           ),

@@ -1,102 +1,87 @@
-import 'dart:convert';
-import 'dart:developer' as developer;
-import '../models/connection_config.dart';
+import 'package:docker_controller/core/utils/result.dart';
+import 'package:docker_controller/models/app_error.dart';
+import 'package:docker_controller/models/docker_network.dart';
 import 'docker_service.dart';
-import '../models/app_error.dart';
-
-class NetworkResult {
-  final bool success;
-  final AppError? error;
-  NetworkResult({required this.success, this.error});
-}
 
 class NetworkService {
-  static const String _logPrefix = 'myapp';
+  NetworkService(this._dockerService);
 
-  static Future<(List<Map<String, dynamic>>?, AppError?)> getNetworks(ConnectionConfig config) async {
-    try {
-      final response = await DockerService.makeRequest(config, '/networks');
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body) as List;
-        developer.log('$_logPrefix: Successfully fetched \${data.length} networks', name: 'NetworkService');
-        return (data.cast<Map<String, dynamic>>(), null);
-      } else {
-        final error = AppError(message: 'Failed to fetch networks', type: 'http', stackTrace: StackTrace.current);
-        developer.log('$_logPrefix: Failed to fetch networks - Status: \${response.statusCode}', name: 'NetworkService');
-        return (null, error);
-      }
-    } catch (e, st) {
-      final error = AppError(message: 'Error fetching networks: $e', type: 'exception', stackTrace: st);
-      developer.log('$_logPrefix: Error fetching networks: $e', name: 'NetworkService');
-      return (null, error);
-    }
+  final DockerService _dockerService;
+
+  Future<Result<List<DockerNetwork>, AppError>> getNetworks() async {
+    final result = await _dockerService.get<List<dynamic>>('/networks');
+    return result.fold(
+      (response) {
+        if (response.statusCode == 200 && response.data != null) {
+          final networks = response.data!
+              .map((item) => DockerNetwork.fromJson(item as Map<String, dynamic>))
+              .toList();
+          return Success(networks);
+        }
+        return Failure(AppError(message: 'Failed to fetch networks: ${response.statusCode}'));
+      },
+      (failure) => Failure(failure),
+    );
   }
 
-  static Future<NetworkResult> createNetwork(
-    ConnectionConfig config,
+  Future<Result<bool, AppError>> createNetwork(
     String name, {
     String driver = 'bridge',
     Map<String, String>? options,
     Map<String, String>? labels,
     Map<String, dynamic>? ipam,
   }) async {
-    try {
-      final body = <String, dynamic>{'Name': name, 'Driver': driver};
-      if (options != null && options.isNotEmpty) body['Options'] = options;
-      if (labels != null && labels.isNotEmpty) body['Labels'] = labels;
-      if (ipam != null && ipam.isNotEmpty) body['IPAM'] = ipam;
-      final response = await DockerService.makePostRequest(
-        config,
-        '/networks/create',
-        body: json.encode(body),
-      );
-      if (response.statusCode == 201) {
-        developer.log('\u001b[32m$_logPrefix: Successfully created network $name', name: 'NetworkService');
-        return NetworkResult(success: true);
-      } else {
-        final error = AppError(message: 'Failed to create network $name', type: 'http', stackTrace: StackTrace.current);
-        developer.log('\u001b[31m$_logPrefix: Failed to create network $name - Status: ${response.statusCode}, Body: ${response.body}', name: 'NetworkService');
-        return NetworkResult(success: false, error: error);
-      }
-    } catch (e, st) {
-      final error = AppError(message: 'Error creating network $name: $e', type: 'exception', stackTrace: st);
-      developer.log('\u001b[31m$_logPrefix: Error creating network $name: $e', name: 'NetworkService');
-      return NetworkResult(success: false, error: error);
+    final data = <String, dynamic>{'Name': name, 'Driver': driver};
+    if (options != null && options.isNotEmpty) {
+      data['Options'] = options;
     }
+    if (labels != null && labels.isNotEmpty) {
+      data['Labels'] = labels;
+    }
+    if (ipam != null && ipam.isNotEmpty) {
+      data['IPAM'] = ipam;
+    }
+
+    final result = await _dockerService.post(
+      '/networks/create',
+      data: data,
+    );
+    return result.fold(
+      (response) {
+        if (response.statusCode == 201) {
+          return const Success(true);
+        }
+        return Failure(AppError(message: 'Failed to create network: ${response.statusCode}'));
+      },
+      (failure) => Failure(failure),
+    );
   }
 
-  static Future<NetworkResult> removeNetwork(ConnectionConfig config, String name) async {
-    try {
-      final response = await DockerService.makeDeleteRequest(config, '/networks/$name');
-      if (response.statusCode == 204) {
-        developer.log('\u001b[32m$_logPrefix: Successfully removed network $name', name: 'NetworkService');
-        return NetworkResult(success: true);
-      } else {
-        final error = AppError(message: 'Failed to remove network $name', type: 'http', stackTrace: StackTrace.current);
-        developer.log('\u001b[31m$_logPrefix: Failed to remove network $name - Status: ${response.statusCode}, Body: ${response.body}', name: 'NetworkService');
-        return NetworkResult(success: false, error: error);
-      }
-    } catch (e, st) {
-      final error = AppError(message: 'Error removing network $name: $e', type: 'exception', stackTrace: st);
-      developer.log('\u001b[31m$_logPrefix: Error removing network $name: $e', name: 'NetworkService');
-      return NetworkResult(success: false, error: error);
-    }
+  Future<Result<bool, AppError>> removeNetwork(String name) async {
+    final result = await _dockerService.delete('/networks/$name');
+    return result.fold(
+      (response) {
+        if (response.statusCode == 204) {
+          return const Success(true);
+        }
+        return Failure(AppError(message: 'Failed to remove network: ${response.statusCode}'));
+      },
+      (failure) => Failure(failure),
+    );
   }
 
-  static Future<Map<String, dynamic>?> inspectNetwork(ConnectionConfig config, String idOrName) async {
-    try {
-      final response = await DockerService.makeRequest(config, '/networks/$idOrName');
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body) as Map<String, dynamic>;
-        developer.log('$_logPrefix: Successfully fetched network details for $idOrName', name: 'NetworkService');
-        return data;
-      } else {
-        developer.log('$_logPrefix: Failed to fetch network details for $idOrName - Status: ${response.statusCode}', name: 'NetworkService');
-        return null;
-      }
-    } catch (e) {
-      developer.log('$_logPrefix: Error fetching network details for $idOrName: $e', name: 'NetworkService');
-      return null;
-    }
+  Future<Result<DockerNetwork, AppError>> inspectNetwork(String idOrName) async {
+    final result = await _dockerService.get<Map<String, dynamic>>(
+      '/networks/$idOrName',
+    );
+    return result.fold(
+      (response) {
+        if (response.statusCode == 200 && response.data != null) {
+          return Success(DockerNetwork.fromJson(response.data!));
+        }
+        return Failure(AppError(message: 'Network not found: ${response.statusCode}'));
+      },
+      (failure) => Failure(failure),
+    );
   }
-} 
+}

@@ -1,16 +1,9 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_dimensions.dart';
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
-import '../constants/app_dimensions.dart';
 
 /// Glassmorphism card widget.
 class AppCard extends StatelessWidget {
-  final Widget child;
-  final EdgeInsetsGeometry? padding;
-  final EdgeInsetsGeometry? margin;
-  final Color? color;
-  final double elevation;
-  final double borderRadius;
-
   const AppCard({
     super.key,
     required this.child,
@@ -20,6 +13,12 @@ class AppCard extends StatelessWidget {
     this.elevation = 0,
     this.borderRadius = AppDimensions.cardBorderRadius,
   });
+  final Widget child;
+  final EdgeInsetsGeometry? padding;
+  final EdgeInsetsGeometry? margin;
+  final Color? color;
+  final double elevation;
+  final double borderRadius;
 
   @override
   Widget build(BuildContext context) {
@@ -31,8 +30,7 @@ class AppCard extends StatelessWidget {
         border: Border.all(color: AppColors.glassBorder, width: 1),
         boxShadow: [
           BoxShadow(
-            // ignore: deprecated_member_use
-            color: Colors.black.withOpacity(0.35),
+            color: Colors.black.withValues(alpha: 0.35),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),

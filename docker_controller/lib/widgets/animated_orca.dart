@@ -3,16 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class AnimatedOrca extends StatefulWidget {
-  final double page;
   const AnimatedOrca({super.key, required this.page});
+  final double page;
 
   @override
   State<AnimatedOrca> createState() => _AnimatedOrcaState();
 }
 
-class _AnimatedOrcaState extends State<AnimatedOrca> with SingleTickerProviderStateMixin {
+class _AnimatedOrcaState extends State<AnimatedOrca>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  
+
   // Animations
   late Animation<double> _orcaAnimation;
   final List<Animation<double>> _squareAnimations = [];
@@ -50,10 +51,12 @@ class _AnimatedOrcaState extends State<AnimatedOrca> with SingleTickerProviderSt
     // Square Animations
     final delays = [800, 1000, 1200, 1400, 1600, 1800, 2000, 2200];
     for (int i = 0; i < delays.length; i++) {
-      double start = delays[i] / 3200.0;
+      final double start = delays[i] / 3200.0;
       double end = (delays[i] + 800) / 3200.0;
       // Clamp end just in case
-      if (end > 1.0) end = 1.0;
+      if (end > 1.0) {
+        end = 1.0;
+      }
       _squareAnimations.add(
         CurvedAnimation(
           parent: _controller,
@@ -103,7 +106,11 @@ class _AnimatedOrcaState extends State<AnimatedOrca> with SingleTickerProviderSt
                       opacity: t,
                       child: Transform(
                         alignment: _squareOrigins[i],
-                        transform: Matrix4.diagonal3Values(scaleVal, scaleVal, 1.0),
+                        transform: Matrix4.diagonal3Values(
+                          scaleVal,
+                          scaleVal,
+                          1.0,
+                        ),
                         child: SvgPicture.asset(
                           'assets/images/onboarding/sq${i + 1}.svg',
                           fit: BoxFit.contain,
@@ -120,7 +127,7 @@ class _AnimatedOrcaState extends State<AnimatedOrca> with SingleTickerProviderSt
                   animation: _orcaAnimation,
                   builder: (context, child) {
                     final t = _orcaAnimation.value;
-                    
+
                     // TranslateY: 800 -> 0
                     final double translateY = 800.0 * (1.0 - t) * scale;
                     // Rotate: -180deg -> 0deg (-pi to 0)
@@ -148,8 +155,8 @@ class _AnimatedOrcaState extends State<AnimatedOrca> with SingleTickerProviderSt
 }
 
 class WaterlineClipper extends CustomClipper<Rect> {
-  final double scale;
   WaterlineClipper(this.scale);
+  final double scale;
 
   @override
   Rect getClip(Size size) {

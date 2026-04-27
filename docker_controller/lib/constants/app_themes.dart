@@ -5,26 +5,26 @@ class AppThemes {
   // Brand colours
   static const Color primaryColor = AppColors.primary;
   static const Color primaryDarkColor = AppColors.backgroundMid;
-  static const Color accentColor = AppColors.secondaryBlue;
-  static const Color errorColor = AppColors.errorRed;
-  static const Color successColor = AppColors.successGreen;
-  static const Color warningColor = AppColors.warningYellow;
+  static const Color accentColor = AppColors.secondary;
+  static const Color errorColor = AppColors.error;
+  static const Color successColor = AppColors.success;
+  static const Color warningColor = AppColors.warning;
 
   static const Color primaryTextColor = AppColors.textPrimary;
 
   /// Returns a single dark theme matching the code.html design system.
   static ThemeData get darkTheme {
-    final cs = ColorScheme(
+    const cs = ColorScheme(
       brightness: Brightness.dark,
       primary: AppColors.primary,
       onPrimary: AppColors.white,
       secondary: AppColors.accentPurple,
       onSecondary: AppColors.white,
-      error: AppColors.errorRed,
+      error: AppColors.error,
       onError: AppColors.white,
-      surface: const Color(0xFF0D0221),         // backgroundDark
+      surface: Color(0xFF0D0221), // backgroundDark
       onSurface: AppColors.textPrimary,
-      surfaceContainerHighest: const Color(0xFF0A0A32),
+      surfaceContainerHighest: Color(0xFF0A0A32),
       outline: AppColors.glassBorder,
     );
     return ThemeData(
@@ -88,14 +88,16 @@ class AppThemes {
         ),
       ),
       switchTheme: SwitchThemeData(
-        thumbColor: WidgetStateProperty.resolveWith((states) =>
-            states.contains(WidgetState.selected)
-                ? AppColors.primary
-                : AppColors.textMuted),
-        trackColor: WidgetStateProperty.resolveWith((states) =>
-            states.contains(WidgetState.selected)
-                ? AppColors.primary.withValues(alpha: 0.4)
-                : AppColors.glassBorder),
+        thumbColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? AppColors.primary
+              : AppColors.textMuted,
+        ),
+        trackColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? AppColors.primary.withValues(alpha: 0.4)
+              : AppColors.glassBorder,
+        ),
       ),
       sliderTheme: const SliderThemeData(
         activeTrackColor: AppColors.primary,

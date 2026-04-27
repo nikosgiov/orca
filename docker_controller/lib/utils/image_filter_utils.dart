@@ -9,15 +9,21 @@ class ImageFilterUtils {
       final repoDigests = image['RepoDigests'] as List? ?? [];
       for (final repoTag in repoTags) {
         final tagStr = repoTag.toString().toLowerCase();
-        if (tagStr.contains(searchLower)) return true;
+        if (tagStr.contains(searchLower)) {
+          return true;
+        }
       }
       for (final digest in repoDigests) {
         final digestStr = digest.toString().toLowerCase();
-        if (digestStr.contains(searchLower)) return true;
+        if (digestStr.contains(searchLower)) {
+          return true;
+        }
       }
       final imageId = image['Id']?.toString().toLowerCase() ?? '';
-      if (imageId.contains(searchLower)) return true;
+      if (imageId.contains(searchLower)) {
+        return true;
+      }
       return false;
     }).toList();
   }
-} 
+}

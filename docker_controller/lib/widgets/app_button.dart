@@ -1,16 +1,7 @@
+import 'package:docker_controller/constants/app_colors.dart';
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
 
-/// Glass-pill button matching code.html's "Inspect Node" style.
 class AppButton extends StatelessWidget {
-  final String label;
-  final VoidCallback? onPressed;
-  final Color? color;
-  final Color? textColor;
-  final EdgeInsetsGeometry? padding;
-  final bool outlined;
-  final double borderRadius;
-
   const AppButton({
     super.key,
     required this.label,
@@ -21,6 +12,13 @@ class AppButton extends StatelessWidget {
     this.outlined = false,
     this.borderRadius = 999,
   });
+  final String label;
+  final VoidCallback? onPressed;
+  final Color? color;
+  final Color? textColor;
+  final EdgeInsetsGeometry? padding;
+  final bool outlined;
+  final double borderRadius;
 
   @override
   Widget build(BuildContext context) {
@@ -30,8 +28,8 @@ class AppButton extends StatelessWidget {
     return GestureDetector(
       onTap: onPressed,
       child: Container(
-        padding: padding ??
-            const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
+        padding:
+            padding ?? const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
         decoration: BoxDecoration(
           color: c.withValues(alpha: outlined ? 0.0 : 0.18),
           borderRadius: BorderRadius.circular(borderRadius),

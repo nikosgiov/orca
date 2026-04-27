@@ -1,72 +1,120 @@
+import 'package:docker_controller/constants/app_paddings.dart';
+import 'package:docker_controller/providers/container_detail_provider.dart';
+import 'package:docker_controller/utils/container_format_utils.dart';
+import 'package:docker_controller/widgets/info_card.dart';
+import 'package:docker_controller/widgets/info_row.dart';
 import 'package:flutter/material.dart';
-import '../../constants/app_strings.dart';
-import '../../constants/app_paddings.dart';
-import '../../widgets/info_card.dart';
-import '../../widgets/info_row.dart';
-import '../../utils/container_format_utils.dart';
-import '../../providers/container_detail_provider.dart';
+
+import '../../l10n/app_localizations.dart';
 
 class InfoTab extends StatelessWidget {
-  final ContainerDetailProvider provider;
   const InfoTab({super.key, required this.provider});
+  final ContainerDetailProvider provider;
   @override
   Widget build(BuildContext context) {
-    if (provider.containerInfo == null) {
-      return const Center(child: Text(AppStrings.noContainerInfo));
+    final info = provider.containerInfo;
+    if (info == null) {
+      return Center(child: Text(AppLocalizations.of(context)!.noContainerInfo));
     }
-    final config = provider.containerInfo!['Config'] as Map<String, dynamic>? ?? {};
-    final hostConfig = provider.containerInfo!['HostConfig'] as Map<String, dynamic>? ?? {};
-    final networkSettings = provider.containerInfo!['NetworkSettings'] as Map<String, dynamic>? ?? {};
-    final state = provider.containerInfo!['State'] as Map<String, dynamic>? ?? {};
+    final config = info.config ?? {};
+    final hostConfig = info.hostConfig ?? {};
+    final networkSettings = info.networkSettings ?? {};
+    final state = info.state is Map ? info.state as Map<String, dynamic> : {};
     return SingleChildScrollView(
       padding: AppPaddings.tabContent,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           InfoCard(
-            title: AppStrings.basicInformation,
+            title: AppLocalizations.of(context)!.basicInformation,
             children: [
-              InfoRow(label: AppStrings.containerId, value: provider.containerId.substring(0, 12), icon: Icons.fingerprint),
-              InfoRow(label: AppStrings.name, value: provider.containerName, icon: Icons.label),
-              InfoRow(label: AppStrings.image, value: config['Image']?.toString() ?? 'Unknown', icon: Icons.image),
-              InfoRow(label: AppStrings.status, value: state['Status']?.toString() ?? 'Unknown', icon: Icons.circle),
-              InfoRow(label: AppStrings.created, value: ContainerFormatUtils.formatDate(provider.containerInfo!['Created']?.toString()), icon: Icons.schedule),
+              InfoRow(
+                label: AppLocalizations.of(context)!.containerId,
+                value: provider.containerId.substring(0, 12),
+                icon: Icons.fingerprint,
+              ),
+              InfoRow(
+                label: AppLocalizations.of(context)!.name,
+                value: provider.containerName,
+                icon: Icons.label,
+              ),
+              InfoRow(
+                label: AppLocalizations.of(context)!.image,
+                value: config['Image']?.toString() ?? AppLocalizations.of(context)!.unknown,
+                icon: Icons.image,
+              ),
+              InfoRow(
+                label: AppLocalizations.of(context)!.status,
+                value: state['Status']?.toString() ?? AppLocalizations.of(context)!.unknown,
+                icon: Icons.circle,
+              ),
+              InfoRow(
+                label: AppLocalizations.of(context)!.created,
+                value: ContainerFormatUtils.formatDate(info.created.toString()),
+                icon: Icons.schedule,
+              ),
             ],
           ),
           const SizedBox(height: 16),
           if (networkSettings['Ports'] != null)
             InfoCard(
-              title: AppStrings.ports,
+              title: AppLocalizations.of(context)!.ports,
               children: [
-                ...ContainerFormatUtils.formatPorts(networkSettings['Ports']).map((port) => InfoRow(label: AppStrings.port, value: port, icon: Icons.link)),
+                ...ContainerFormatUtils.formatPorts(
+                  networkSettings['Ports'],
+                ).map(
+                  (port) => InfoRow(
+                    label: AppLocalizations.of(context)!.port,
+                    value: port,
+                    icon: Icons.link,
+                  ),
+                ),
               ],
             ),
           const SizedBox(height: 16),
           if (hostConfig['Binds'] != null)
             InfoCard(
-              title: AppStrings.volumes,
+              title: AppLocalizations.of(context)!.volumes,
               children: [
-                ...(hostConfig['Binds'] as List? ?? []).map((volume) => InfoRow(label: AppStrings.volume, value: volume.toString(), icon: Icons.folder)),
+                ...(hostConfig['Binds'] as List? ?? []).map(
+                  (volume) => InfoRow(
+                    label: AppLocalizations.of(context)!.volume,
+                    value: volume.toString(),
+                    icon: Icons.folder,
+                  ),
+                ),
               ],
             ),
           const SizedBox(height: 16),
           if (config['Env'] != null)
             InfoCard(
-              title: AppStrings.envVars,
+              title: AppLocalizations.of(context)!.envVars,
               children: [
-                ...(config['Env'] as List? ?? []).map((env) => InfoRow(label: AppStrings.env, value: env.toString(), icon: Icons.settings)),
+                ...(config['Env'] as List? ?? []).map(
+                  (env) => InfoRow(
+                    label: AppLocalizations.of(context)!.env,
+                    value: env.toString(),
+                    icon: Icons.settings,
+                  ),
+                ),
               ],
             ),
           const SizedBox(height: 16),
           if (networkSettings['Networks'] != null)
             InfoCard(
-              title: AppStrings.networks,
+              title: AppLocalizations.of(context)!.networks,
               children: [
-                ...(networkSettings['Networks'] as Map? ?? {}).keys.map((network) => InfoRow(label: AppStrings.network, value: network.toString(), icon: Icons.wifi)),
+                ...(networkSettings['Networks'] as Map? ?? {}).keys.map(
+                  (network) => InfoRow(
+                    label: AppLocalizations.of(context)!.network,
+                    value: network.toString(),
+                    icon: Icons.wifi,
+                  ),
+                ),
               ],
             ),
         ],
       ),
     );
   }
-} 
+}

@@ -1,19 +1,18 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_text_styles.dart';
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
-import '../constants/app_text_styles.dart';
 
 /// Section header for settings cards with gradient icon and label.
 class SettingsCardHeader extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final List<Color> gradientColors;
-
   const SettingsCardHeader({
     super.key,
     required this.icon,
     required this.title,
     required this.gradientColors,
   });
+  final IconData icon;
+  final String title;
+  final List<Color> gradientColors;
 
   @override
   Widget build(BuildContext context) {

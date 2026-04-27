@@ -32,14 +32,14 @@ class AppGradients {
   static const LinearGradient primary = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [AppColors.primary, AppColors.secondaryBlue],
+    colors: [AppColors.primary, AppColors.secondary],
   );
 
   /// Same as [primary] but horizontal.
   static const LinearGradient primaryHorizontal = LinearGradient(
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
-    colors: [AppColors.primary, AppColors.secondaryBlue],
+    colors: [AppColors.primary, AppColors.secondary],
   );
 
   /// Kept for backward compat.

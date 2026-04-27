@@ -1,103 +1,39 @@
-enum AuthType {
-  none,
-  basic,
-}
+import 'package:freezed_annotation/freezed_annotation.dart';
+import '../l10n/app_localizations.dart';
+
+part 'connection_config.freezed.dart';
+part 'connection_config.g.dart';
+
+enum AuthType { none, basic }
 
 extension AuthTypeExtension on AuthType {
-  String get displayName {
-    switch (this) {
-      case AuthType.none:
-        return 'No Authentication';
-      case AuthType.basic:
-        return 'Basic Authentication';
-    }
-  }
-  String get description {
-    switch (this) {
-      case AuthType.none:
-        return 'Connect without authentication';
-      case AuthType.basic:
-        return 'Use username and password';
-    }
-  }
+  String getDisplayName(AppLocalizations l10n) => switch (this) {
+        AuthType.none => l10n.authNone,
+        AuthType.basic => l10n.authBasic,
+      };
+
+  String getDescription(AppLocalizations l10n) => switch (this) {
+        AuthType.none => l10n.authNoneDesc,
+        AuthType.basic => l10n.authBasicDesc,
+      };
 }
 
-class ConnectionConfig {
-  final String uri;
-  final AuthType authType;
-  final String? token;
-  final bool useTls;
-  final Map<String, dynamic>? firebaseConfig;
-
-
-  ConnectionConfig({
-    required this.uri,
-    this.authType = AuthType.none,
-    this.token,
-    this.useTls = false,
-    this.firebaseConfig,
-  });
-
-
-  ConnectionConfig copyWith({
-    String? uri,
-    AuthType? authType,
+@freezed
+class ConnectionConfig with _$ConnectionConfig {
+  const factory ConnectionConfig({
+    required String uri,
+    @Default(AuthType.none) AuthType authType,
     String? token,
-    bool? useTls,
+    @Default(false) bool useTls,
     Map<String, dynamic>? firebaseConfig,
-  }) {
-    return ConnectionConfig(
-      uri: uri ?? this.uri,
-      authType: authType ?? this.authType,
-      token: token ?? this.token,
-      useTls: useTls ?? this.useTls,
-      firebaseConfig: firebaseConfig ?? this.firebaseConfig,
-    );
-  }
+  }) = _ConnectionConfig;
 
+  const ConnectionConfig._();
 
-  Map<String, dynamic> toJson() {
-    return {
-      'uri': uri,
-      'authType': authType.name,
-      'token': token,
-      'useTls': useTls,
-      'firebaseConfig': firebaseConfig,
-    };
-  }
+  factory ConnectionConfig.fromJson(Map<String, dynamic> json) =>
+      _$ConnectionConfigFromJson(json);
 
+  bool get isValid => uri.isNotEmpty;
 
-  factory ConnectionConfig.fromJson(Map<String, dynamic> json) {
-    return ConnectionConfig(
-      uri: json['uri'] ?? '',
-      authType: AuthType.values.firstWhere(
-        (e) => e.name == json['authType'],
-        orElse: () => AuthType.none,
-      ),
-      token: json['token'],
-      useTls: _parseBool(json['useTls']),
-      firebaseConfig: json['firebaseConfig'] != null 
-          ? Map<String, dynamic>.from(json['firebaseConfig']) 
-          : null,
-    );
-  }
-
-
-  static bool _parseBool(dynamic value) {
-    if (value == null) return false;
-    if (value is bool) return value;
-    if (value is String) {
-      return value.toLowerCase() == 'true';
-    }
-    return false;
-  }
-
-  bool get isValid {
-    if (uri.isEmpty) return false;
-    return true;
-  }
-
-  String get displayUri {
-    return uri;
-  }
-} 
+  String get displayUri => uri;
+}

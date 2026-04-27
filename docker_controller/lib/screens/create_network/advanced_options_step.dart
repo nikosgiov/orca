@@ -1,15 +1,17 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/providers/create_network_provider.dart';
+import 'package:docker_controller/utils/validators.dart';
 import 'package:flutter/material.dart';
-import '../../constants/app_colors.dart';
-import '../../providers/create_network_provider.dart';
-import '../../utils/validators.dart';
+
+import '../../l10n/app_localizations.dart';
 
 class AdvancedOptionsStep extends StatelessWidget {
-  final CreateNetworkProvider provider;
-
   const AdvancedOptionsStep({super.key, required this.provider});
+  final CreateNetworkProvider provider;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -26,47 +28,77 @@ class AdvancedOptionsStep extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      const Icon(Icons.settings, color: AppColors.secondaryBlue),
+                      const Icon(
+                        Icons.settings,
+                        color: AppColors.secondary,
+                      ),
                       const SizedBox(width: 8),
-                      const Text('Driver Options', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text(
+                        l10n.driverOptions,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       const Spacer(),
                       IconButton(
                         onPressed: provider.addOption,
-                        icon: const Icon(Icons.add, color: AppColors.secondaryBlue),
-                        tooltip: 'Add option',
+                        icon: const Icon(
+                          Icons.add,
+                          color: AppColors.secondary,
+                        ),
+                        tooltip: l10n.addOption,
                       ),
                     ],
                   ),
                 ),
                 if (provider.options.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Text('No options added', style: TextStyle(color: Colors.grey)),
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(
+                      l10n.noOptionsAdded,
+                      style: const TextStyle(color: Colors.grey),
+                    ),
                   ),
                 ...provider.options.asMap().entries.map((entry) {
                   final index = entry.key;
                   final option = entry.value;
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     child: Row(
                       children: [
                         Expanded(
                           child: TextFormField(
-                            decoration: const InputDecoration(
-                              labelText: 'Key',
+                            decoration: InputDecoration(labelText: l10n.keyLabel),
+                            onChanged: (value) => provider.updateOption(
+                              index,
+                              value,
+                              option['value'] ?? '',
                             ),
-                            onChanged: (value) => provider.updateOption(index, value, option['value'] ?? ''),
-                            validator: Validators.validateDriverOptionKey,
+                            validator: (val) => Validators.validateDriverOptionKey(
+                              val,
+                              requiredError: l10n.driverOptionKeyRequired,
+                              invalidError: l10n.driverOptionKeyInvalid,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: TextFormField(
-                            decoration: const InputDecoration(
-                              labelText: 'Value',
+                            decoration: InputDecoration(
+                              labelText: l10n.valueLabel,
                             ),
-                            onChanged: (value) => provider.updateOption(index, option['key'] ?? '', value),
-                            validator: Validators.validateDriverOptionValue,
+                            onChanged: (value) => provider.updateOption(
+                              index,
+                              option['key'] ?? '',
+                              value,
+                            ),
+                            validator: (val) => Validators.validateDriverOptionValue(
+                              val,
+                              requiredError: l10n.driverOptionValueRequired,
+                              noTabsError: l10n.driverOptionValueNoTabs,
+                              tooLongError: l10n.driverOptionValueTooLong,
+                            ),
                           ),
                         ),
                         IconButton(
@@ -94,47 +126,74 @@ class AdvancedOptionsStep extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      const Icon(Icons.label, color: AppColors.secondaryBlue),
+                      const Icon(Icons.label, color: AppColors.secondary),
                       const SizedBox(width: 8),
-                      const Text('Labels', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text(
+                        l10n.labels,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       const Spacer(),
                       IconButton(
                         onPressed: provider.addLabel,
-                        icon: const Icon(Icons.add, color: AppColors.secondaryBlue),
-                        tooltip: 'Add label',
+                        icon: const Icon(
+                          Icons.add,
+                          color: AppColors.secondary,
+                        ),
+                        tooltip: l10n.addLabel,
                       ),
                     ],
                   ),
                 ),
                 if (provider.labels.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Text('No labels added', style: TextStyle(color: Colors.grey)),
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(
+                      l10n.noLabelsAdded,
+                      style: const TextStyle(color: Colors.grey),
+                    ),
                   ),
                 ...provider.labels.asMap().entries.map((entry) {
                   final index = entry.key;
                   final label = entry.value;
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     child: Row(
                       children: [
                         Expanded(
                           child: TextFormField(
-                            decoration: const InputDecoration(
-                              labelText: 'Key',
+                            decoration: InputDecoration(labelText: l10n.keyLabel),
+                            onChanged: (value) => provider.updateLabel(
+                              index,
+                              value,
+                              label['value'] ?? '',
                             ),
-                            onChanged: (value) => provider.updateLabel(index, value, label['value'] ?? ''),
-                            validator: Validators.validateLabelKey,
+                            validator: (val) => Validators.validateLabelKey(
+                              val,
+                              requiredError: l10n.labelKeyRequired,
+                              invalidError: l10n.labelKeyInvalid,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: TextFormField(
-                            decoration: const InputDecoration(
-                              labelText: 'Value',
+                            decoration: InputDecoration(
+                              labelText: l10n.valueLabel,
                             ),
-                            onChanged: (value) => provider.updateLabel(index, label['key'] ?? '', value),
-                            validator: Validators.validateLabelValue,
+                            onChanged: (value) => provider.updateLabel(
+                              index,
+                              label['key'] ?? '',
+                              value,
+                            ),
+                            validator: (val) => Validators.validateLabelValue(
+                              val,
+                              requiredError: l10n.labelValueRequired,
+                              noTabsError: l10n.labelValueNoTabs,
+                              tooLongError: l10n.labelValueTooLong,
+                            ),
                           ),
                         ),
                         IconButton(

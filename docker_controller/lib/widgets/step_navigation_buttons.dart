@@ -1,17 +1,12 @@
+import 'package:docker_controller/constants/app_colors.dart';
+import 'package:docker_controller/constants/app_dimensions.dart';
+import 'package:docker_controller/constants/app_gradients.dart';
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
-import '../constants/app_dimensions.dart';
-import '../constants/app_gradients.dart';
-import '../constants/app_strings.dart';
+
+import '../l10n/app_localizations.dart';
 
 /// Prev / Next (or Create) navigation button pair for multi-step wizards.
 class StepNavigationButtons extends StatelessWidget {
-  final int currentStep;
-  final int totalSteps;
-  final VoidCallback? onPrevious;
-  final VoidCallback onNextOrCreate;
-  final bool isCreating;
-
   const StepNavigationButtons({
     super.key,
     required this.currentStep,
@@ -20,6 +15,11 @@ class StepNavigationButtons extends StatelessWidget {
     required this.onNextOrCreate,
     this.isCreating = false,
   });
+  final int currentStep;
+  final int totalSteps;
+  final VoidCallback? onPrevious;
+  final VoidCallback onNextOrCreate;
+  final bool isCreating;
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +40,7 @@ class StepNavigationButtons extends StatelessWidget {
                   foregroundColor: AppColors.white,
                   shape: RoundedRectangleBorder(borderRadius: radius),
                 ),
-                child: const Text(AppStrings.previous),
+                child: Text(AppLocalizations.of(context)!.previous),
               ),
             ),
           ),
@@ -60,18 +60,18 @@ class StepNavigationButtons extends StatelessWidget {
                 shape: RoundedRectangleBorder(borderRadius: radius),
               ),
               child: isCreating
-                  ? SizedBox(
+                  ? const SizedBox(
                       width: AppDimensions.buttonSpinnerSize,
                       height: AppDimensions.buttonSpinnerSize,
-                      child: const CircularProgressIndicator(
+                      child: CircularProgressIndicator(
                         color: AppColors.white,
                         strokeWidth: AppDimensions.buttonSpinnerStrokeWidth,
                       ),
                     )
                   : Text(
                       currentStep == totalSteps - 1
-                          ? "Create"
-                          : AppStrings.next,
+                          ? AppLocalizations.of(context)!.create
+                          : AppLocalizations.of(context)!.next,
                     ),
             ),
           ),
