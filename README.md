@@ -92,7 +92,10 @@ The backend is written in Go to act as a secure, lightweight reverse proxy along
 ### Mobile App (UI & State)
 For the mobile interface, the app is built using Flutter and follows an MVVM-style state management approach leveraging the `Provider` package.
 
-- **State Management:** The business logic is decoupled from the UI layers into dedicated Providers (e.g., `AppProvider`, `CreateContainerProvider`, `LogsNotificationsProvider`). These providers act as ViewModels, reacting to user intents, orchestrating API calls to the Go backend, and notifying listeners to trigger UI rebuilds downstream.
+- **State Management:** The business logic is decoupled from the UI layers into dedicated Providers (e.g., `AppConfigProvider`, `CreateContainerProvider`, `LogsNotificationsProvider`). These providers act as ViewModels, reacting to user intents, orchestrating API calls to the Go backend, and notifying listeners to trigger UI rebuilds downstream.
+- **Dependency Injection:** Core services and repositories are registered and retrieved using `get_it`, providing a clean, decoupled service locator pattern.
+- **Routing:** Navigation is handled declaratively using `go_router`, offering robust deep-linking and route management.
+- **Localization:** The app is configured for internationalization using Flutter's native `gen_l10n` approach.
 - **UI Layer:** The views (Screens and continuous widgets) strictly observe the Provider states. Leveraging specialized widgets for features like live telemetry charts (`fl_chart`) and WebSocket terminal emulation (`xterm`), the UI reacts seamlessly.
 - **Native Experience:** Includes a custom glassmorphism design system to deliver a visually premium, native-feeling app experience tailored for both Android and iOS.
 
@@ -263,11 +266,15 @@ orca/
 │
 └── docker_controller/          # Flutter mobile application
     ├── lib/
-    │   ├── main.dart           # App entry, provider setup, navigation
-    │   ├── screens/            # All UI screens (19 screens)
-    │   ├── providers/          # State management (13 providers)
+    │   ├── core/               # Dependency injection (get_it), extensions, and core utilities
+    │   ├── l10n/               # Localization delegates and ARB files
+    │   ├── router/             # Declarative routing configuration (go_router)
+    │   ├── main.dart           # App entry and service locator setup
+    │   ├── app.dart            # Root widget, global provider setup, and router integration
+    │   ├── screens/            # All UI screens
+    │   ├── providers/          # State management (ViewModels)
     │   ├── services/           # API clients, notification service, Firebase handler
-    │   ├── widgets/            # Reusable UI components (24 widgets)
+    │   ├── widgets/            # Reusable UI components
     │   ├── models/             # Data models
     │   ├── constants/          # Colors, themes, text styles, strings, dimensions
     │   └── utils/              # Formatters, validators, chart utilities
@@ -293,7 +300,7 @@ orca/
 | Layer | Technology |
 |---|---|
 | **Backend** | Go 1.24, Chi router, Docker Engine SDK, gorilla/websocket, golang-jwt, gopsutil, Firebase Admin SDK |
-| **Mobile** | Flutter 3.8, Dart, Provider, fl_chart, xterm, Firebase Messaging, shared_preferences, flutter_secure_storage |
+| **Mobile** | Flutter 3.8, Dart, Provider, go_router, get_it, fl_chart, xterm, Firebase Messaging, shared_preferences, flutter_secure_storage |
 | **Deployment** | Docker (multi-stage Alpine build), Docker Compose, Nginx |
 | **Push Notifications** | Firebase Cloud Messaging (FCM v1 HTTP API) |
 
