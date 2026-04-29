@@ -89,15 +89,16 @@ The backend is written in Go to act as a secure, lightweight reverse proxy along
 - **Telemetry Collection:** A dedicated system service routine collects CPU, memory, disk I/O, network I/O, and NVIDIA GPU metrics natively via `gopsutil` and `nvidia-smi`.
 - **Event Streaming & WebSockets:** Implements continuous listeners on the Docker event stream to dispatch Firebase Cloud Messaging alerts, and handles bi-directional xterm-compatible WebSocket streams for container shell execution.
 
-### Mobile App (UI & State)
-For the mobile interface, the app is built using Flutter and follows an MVVM-style state management approach leveraging the `Provider` package.
+### Mobile App Architecture (Service-Oriented MVVM)
+The Flutter mobile application follows a **Service-Oriented / Feature-First** architecture built upon the **MVVM (Model-View-ViewModel)** design pattern. It prioritizes clean decoupling between the UI, state management, and business logic, ensuring scalability and testability.
 
-- **State Management:** The business logic is decoupled from the UI layers into dedicated Providers (e.g., `AppConfigProvider`, `CreateContainerProvider`, `LogsNotificationsProvider`). These providers act as ViewModels, reacting to user intents, orchestrating API calls to the Go backend, and notifying listeners to trigger UI rebuilds downstream.
-- **Dependency Injection:** Core services and repositories are registered and retrieved using `get_it`, providing a clean, decoupled service locator pattern.
-- **Routing:** Navigation is handled declaratively using `go_router`, offering robust deep-linking and route management.
-- **Localization:** The app is configured for internationalization using Flutter's native `gen_l10n` approach.
-- **UI Layer:** The views (Screens and continuous widgets) strictly observe the Provider states. Leveraging specialized widgets for features like live telemetry charts (`fl_chart`) and WebSocket terminal emulation (`xterm`), the UI reacts seamlessly.
-- **Native Experience:** Includes a custom glassmorphism design system to deliver a visually premium, native-feeling app experience tailored for both Android and iOS.
+- **Service Layer (`lib/services/`):** The foundation of the app's logic. Services are pure Dart classes responsible for external communication (API via **Dio**, storage, platform channels). They act as Repositories, isolating network calls from the ViewModels.
+- **Provider Layer (`lib/providers/`):** Providers act as the "ViewModels". They orchestrate one or more services to maintain app state. They do not know about the UI; they simply notify listeners when data changes. The app uses highly specialized providers (e.g., `AuthProvider`, `ContainersProvider`, `SystemStatsProvider`).
+- **UI Layer (`lib/screens/` & `lib/widgets/`):** The visual representation of the app. The UI layer is "dumb"—it delegates all logic to providers and uses `Consumer` or `context.watch` to rebuild declaratively. Features a custom glassmorphism design system for a premium aesthetic.
+- **Dependency Injection (DI):** Core services are registered as `LazySingletons` and retrieved using `get_it`. This service locator pattern avoids provider-drilling, ensures singletons for stateful services, and allows for effortless mocking during unit tests.
+- **State & Error Handling:** The app utilizes a robust functional approach to state and errors. API calls return `Result` wrappers (`success` or `failure`) to explicitly handle errors without relying on raw exceptions. State is propagated using a state machine class (`AppState` with `AppInitial`, `AppLoading`, `AppSuccess`, `AppStateError`), forcing the UI to gracefully handle all network states.
+- **Testing & Code Quality:** The app embraces **Test Driven Development (TDD)** principles. The codebase contains extensive unit tests for providers and services, utilizing `mockito` to generate mocks and test state transitions in complete isolation.
+- **Routing & Localization:** Navigation is handled declaratively using `go_router`, and the app is localized using Flutter's native `gen_l10n` approach.
 
 ### Persistence
 
@@ -300,7 +301,7 @@ orca/
 | Layer | Technology |
 |---|---|
 | **Backend** | Go 1.24, Chi router, Docker Engine SDK, gorilla/websocket, golang-jwt, gopsutil, Firebase Admin SDK |
-| **Mobile** | Flutter 3.8, Dart, Provider, go_router, get_it, fl_chart, xterm, Firebase Messaging, shared_preferences, flutter_secure_storage |
+| **Mobile** | Flutter 3.8, Dart, Provider, go_router, get_it, Dio, fl_chart, xterm, mockito, Firebase Messaging, shared_preferences, flutter_secure_storage |
 | **Deployment** | Docker (multi-stage Alpine build), Docker Compose, Nginx |
 | **Push Notifications** | Firebase Cloud Messaging (FCM v1 HTTP API) |
 
